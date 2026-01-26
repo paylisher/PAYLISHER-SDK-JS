@@ -48,6 +48,7 @@ class PaylisherSDK {
     }
 
     public async deferredDeepLink(deeplinkUrl: string, campaignKey?: string): Promise<void> {
+        this.track('install_intent_clicked', { deeplink_url: deeplinkUrl, campaign_key: campaignKey });
         await this.campaign.recordClick(deeplinkUrl, campaignKey);
     }
 }
