@@ -20,9 +20,12 @@ export class Campaign {
             const effectiveCampaignKey = campaignKey || utm['utm_campaign'] || 'organic';
 
             const ua = navigator.userAgent.toLowerCase();
-            // Default to 'ios' if not Android (covers iOS and Desktop for testing)
-            // The backend ONLY accepts 'ios' or 'android'
-            const platform = ua.includes('android') ? 'android' : 'ios';
+            let platform = 'web';
+            if (ua.includes('android')) {
+                platform = 'android';
+            } else if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) {
+                platform = 'ios';
+            }
 
             const payload = {
                 fingerprint,
