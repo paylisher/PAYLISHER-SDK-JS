@@ -60,8 +60,10 @@ async function sha256(message: string): Promise<string> {
     return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-export const generateFingerprint = async (): Promise<string> => {
-    const ip = await getPublicIp(); // Fetch public IP
+export const generateFingerprint = async (ip?: string): Promise<string> => {
+    if (!ip) {
+        ip = await getPublicIp(); // Fetch public IP if not provided
+    }
     const os = extractOS(navigator.userAgent);
     const timeWindow = getTimeWindow(Date.now());
 

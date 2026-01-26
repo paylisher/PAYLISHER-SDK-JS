@@ -1,6 +1,6 @@
 import { PaylisherConfig } from './config';
 import { generateFingerprint } from './fingerprint';
-import { post } from './utils/http';
+import { post, getPublicIp } from './utils/http';
 import { getUtmParams } from './utils/url';
 
 export class Campaign {
@@ -12,11 +12,17 @@ export class Campaign {
 
     public async recordClick(deeplinkUrl: string, campaignKey?: string, metadata?: any): Promise<void> {
         try {
-            const fingerprint = await generateFingerprint();
+            const ip = await getPublicIp();
+            const fingerprint = await generateFingerprint(ip);
             const utm = getUtmParams();
 
             // If campaignKey is missing, try to find it in UTM params
             const effectiveCampaignKey = campaignKey || utm['utm_campaign'] || 'organic';
+
+            const ua = navigator.userAgent.toLowerCase();
+            // Default to 'ios' if not Android (covers iOS and Desktop for testing)
+            // The backend ONLY accepts 'ios' or 'android'
+            const platform = ua.includes('android') ? 'android' : 'ios';
 
             const payload = {
                 fingerprint,
@@ -24,9 +30,12 @@ export class Campaign {
                 campaign_key: effectiveCampaignKey,
                 click_timestamp: new Date().toISOString(),
                 user_agent: navigator.userAgent,
-                // IP address will be detected by server, but fingerprint hash relies on what we fetched
-                utm: utm,
-                metadata: metadata || {},
+                ip_address: ip,
+                platform: platform,
+                metadata: {
+                    ...utm,
+                    ...(metadata || {})
+                },
             };
 
             if (this.config.debug) {
