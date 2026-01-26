@@ -7,6 +7,6 @@ export interface PaylisherConfig {
 
 export const DEFAULT_CONFIG: Partial<PaylisherConfig> = {
     dataStudioHost: 'https://ds.i.paylisher.com',
-    campaignHost: 'https://api.usepublisher.com',
+    campaignHost: 'https://link.usepublisher.com',
     debug: false,
 };
