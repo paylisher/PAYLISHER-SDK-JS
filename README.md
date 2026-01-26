@@ -11,11 +11,35 @@ Paylisher Web SDK, web sitenizdeki kullanıcı etkileşimlerini takip etmek ve w
 
 ## Kurulum
 
+### Web (JavaScript / TypeScript)
+
 Sayfanızın `<head>` etiketleri arasına aşağıdaki kodu ekleyin:
 
 ```html
 <script>
-    !function(t,e){
+    !function(t,e){ ... (yukarıdaki snippet aynen kalır) ... 
+```
+
+### React Native
+
+React Native projelerinde SDK'yı npm paketi olarak proje bağımlılıklarına eklemeniz gerekir. Ayrıca gerekli adaptör kütüphanelerini de kurmalısınız.
+
+```bash
+npm install paylisher-web-sdk @react-native-async-storage/async-storage react-native-device-info
+```
+
+Kullanım (App.tsx veya ana dosyanızda):
+
+```javascript
+import Paylisher from 'paylisher-web-sdk';
+
+// Uygulama açılışında başlatın
+Paylisher.init('API_ANAHTARINIZ', {
+    api_host: 'https://ds.i.paylisher.com', // Opsiyonel (Varsayılan: Prod)
+    campaignHost: 'https://link.usepublisher.com' // Opsiyonel
+});
+```
+
         var o,n,p,r;e.__SV||(window.paylisher=e,e._i=[],e.init=function(i,s,a){
             function g(t,e){
                 var o=e.split(".");
