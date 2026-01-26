@@ -2,6 +2,10 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import terser from '@rollup/plugin-terser';
+import replace from '@rollup/plugin-replace';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export default {
     input: 'src/index.ts',
@@ -29,5 +33,10 @@ export default {
         resolve(),
         commonjs(),
         typescript({ tsconfig: './tsconfig.json' }),
+        replace({
+            'process.env.DATA_STUDIO_HOST': JSON.stringify(process.env.DATA_STUDIO_HOST || 'https://ds.i.paylisher.com'),
+            'process.env.CAMPAIGN_HOST': JSON.stringify(process.env.CAMPAIGN_HOST || 'https://link.usepublisher.com'),
+            preventAssignment: true,
+        }),
     ],
 };
