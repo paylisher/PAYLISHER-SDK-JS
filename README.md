@@ -43,8 +43,9 @@ Sayfanızın `<head>` etiketleri arasına aşağıdaki kodu ekleyin:
         var s = document.createElement("script");
         s.type = "text/javascript";
         s.async = true;
-        // NOT: Bu adresi Paylisher CDN adresi olarak bırakabilir veya
-        // kendi sunucunuza (self-hosted) yüklediyseniz o adresi yazabilirsiniz.
+        // NOT: Bu adres, SDK'nın deploy edildiği CDN Ingress adresidir.
+        // Prod: https://cdn.paylisher.com/sdk/v1/paylisher.min.js
+        // Test: https://cdn-test.paylisher.com/sdk/v1/paylisher.min.js
         s.src = "https://cdn.paylisher.com/sdk/v1/paylisher.min.js"; 
         var x = document.getElementsByTagName("script")[0];
         x.parentNode.insertBefore(s, x);
