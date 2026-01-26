@@ -103,3 +103,31 @@ npm run build
 ```
 
 Çıktı dosyaları `dist/` klasöründe oluşturulacaktır. `dist/paylisher.min.js` dosyasını sunucunuza yükleyerek kullanabilirsiniz.
+
+## İnşa Yapılandırması (Build Configuration)
+
+SDK'yı farklı ortamlar (Prodüksiyon, Test, On-Premise Müşteri) için derlerken hedef sunucu adreslerini `.env` dosyası ile değiştirebilirsiniz.
+
+1. `.env.example` dosyasını `.env` olarak kopyalayın:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. `.env` dosyasını düzenleyerek hedef sunucu adreslerini girin:
+
+   ```env
+   # Analitik Sunucusu (DataStudio)
+   DATA_STUDIO_HOST=https://datastudio.musteri-domain.com
+   
+   # Kampanya & Link Sunucusu
+   CAMPAIGN_HOST=https://link.musteri-domain.com
+   ```
+
+3. SDK'yı derleyin:
+
+   ```bash
+   npm run build
+   ```
+
+Derlenen `paylisher.js` dosyası artık bu tanımladığınız sunuculara istek atacaktır.
