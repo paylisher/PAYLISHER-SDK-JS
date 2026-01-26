@@ -2,41 +2,37 @@ import { PaylisherConfig } from './config';
 import { generateFingerprint } from './fingerprint';
 import { post, getPublicIp } from './utils/http';
 import { getUtmParams } from './utils/url';
+import { PlatformAdapter } from './platform/interface';
 
 export class Campaign {
     private config: PaylisherConfig;
+    private adapter: PlatformAdapter;
 
-    constructor(config: PaylisherConfig) {
+    constructor(config: PaylisherConfig, adapter: PlatformAdapter) {
         this.config = config;
+        this.adapter = adapter;
     }
 
     public async recordClick(deeplinkUrl: string, campaignKey?: string, metadata?: any): Promise<void> {
         try {
             const ip = await getPublicIp();
-            const fingerprint = await generateFingerprint(ip);
-            const utm = getUtmParams();
+            const deviceInfo = await this.adapter.getDeviceInfo();
+            const fingerprint = await generateFingerprint(deviceInfo.userAgent, ip);
+            const utm = getUtmParams(); // Safe (guarded)
 
             // If campaignKey is missing, try to find it in UTM params
-            const effectiveCampaignKey = campaignKey || utm['utm_campaign'] || 'organic';
-
-            const ua = navigator.userAgent.toLowerCase();
-            let platform = 'web';
-            if (ua.includes('android')) {
-                platform = 'android';
-            } else if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) {
-                platform = 'ios';
-            }
+            const effectiveCampaignKey = campaignKey || (utm ? utm['utm_campaign'] : undefined) || 'organic';
 
             const payload = {
                 fingerprint,
                 deeplink_url: deeplinkUrl,
                 campaign_key: effectiveCampaignKey,
                 click_timestamp: new Date().toISOString(),
-                user_agent: navigator.userAgent,
+                user_agent: deviceInfo.userAgent,
                 ip_address: ip,
-                platform: platform,
+                platform: deviceInfo.platform,
                 metadata: {
-                    ...utm,
+                    ...(utm || {}),
                     ...(metadata || {})
                 },
             };

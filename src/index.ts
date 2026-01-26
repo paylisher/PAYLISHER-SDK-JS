@@ -1,17 +1,23 @@
 import { PaylisherConfig, DEFAULT_CONFIG } from './config';
 import { Tracker } from './tracker';
 import { Campaign } from './campaign';
+import { PlatformAdapter } from './platform/interface';
+import { WebPlatformAdapter } from './platform/web';
 
-class PaylisherSDK {
+export class PaylisherSDK {
     public config: PaylisherConfig;
     private tracker: Tracker;
     private campaign: Campaign;
+    private adapter: PlatformAdapter;
     private initialized = false;
 
-    constructor() {
+    constructor(adapter?: PlatformAdapter) {
         this.config = DEFAULT_CONFIG as PaylisherConfig;
-        this.tracker = new Tracker(this.config);
-        this.campaign = new Campaign(this.config);
+        this.adapter = adapter || new WebPlatformAdapter();
+        this.config.platformAdapter = this.adapter;
+
+        this.tracker = new Tracker(this.config, this.adapter);
+        this.campaign = new Campaign(this.config, this.adapter);
     }
 
     public init(apiKey: string, config: Partial<PaylisherConfig> = {}): void {
@@ -27,8 +33,13 @@ class PaylisherSDK {
         }
 
         this.config = { ...DEFAULT_CONFIG, ...config, apiKey };
-        this.tracker = new Tracker(this.config);
-        this.campaign = new Campaign(this.config);
+        // If config passed a new adapter, use it, otherwise keep default
+        if (config.platformAdapter) {
+            this.adapter = config.platformAdapter;
+        }
+
+        this.tracker = new Tracker(this.config, this.adapter);
+        this.campaign = new Campaign(this.config, this.adapter);
         this.initialized = true;
 
         if (this.config.debug) {
@@ -53,25 +64,28 @@ class PaylisherSDK {
     }
 }
 
-const paylisherInstance = new PaylisherSDK();
+// Default export for Web (auto-instantiated)
+const paylisherInstance = new PaylisherSDK(new WebPlatformAdapter());
 
-// --- Queue Draining Logic ---
-// The snippet creates: window.paylisher = { _i: [], init: ..., push: ... }
-const win = window as any;
-const existingStub = win.paylisher;
+// --- Queue Draining Logic (Web Only) ---
+if (typeof window !== 'undefined') {
+    // The snippet creates: window.paylisher = { _i: [], init: ..., push: ... }
+    const win = window as any;
+    const existingStub = win.paylisher;
 
-if (existingStub && Array.isArray(existingStub._i)) {
-    // Process the '_i' array which contains init arguments: [[apiKey, config, name]]
-    existingStub._i.forEach((args: any[]) => {
-        if (args.length >= 1) {
-            const apiKey = args[0];
-            const config = args[1] || {};
-            paylisherInstance.init(apiKey, config);
-        }
-    });
+    if (existingStub && Array.isArray(existingStub._i)) {
+        // Process the '_i' array which contains init arguments: [[apiKey, config, name]]
+        existingStub._i.forEach((args: any[]) => {
+            if (args.length >= 1) {
+                const apiKey = args[0];
+                const config = args[1] || {};
+                paylisherInstance.init(apiKey, config);
+            }
+        });
+    }
+
+    // Replace the stub with the real instance
+    win.paylisher = paylisherInstance;
 }
-
-// Replace the stub with the real instance
-win.paylisher = paylisherInstance;
 
 export default paylisherInstance;

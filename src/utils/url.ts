@@ -1,5 +1,10 @@
 export const getUtmParams = (): Record<string, string> => {
     const params: Record<string, string> = {};
+
+    if (typeof window === 'undefined' || !window.location) {
+        return params;
+    }
+
     const searchParams = new URLSearchParams(window.location.search);
 
     searchParams.forEach((value, key) => {
