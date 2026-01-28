@@ -1,4 +1,5 @@
 import { getPublicIp } from './utils/http';
+import { sha256 } from './utils/sha256';
 
 // Replicates backend logic from campaign module
 export const extractOS = (userAgent: string): string => {
@@ -52,19 +53,11 @@ export const getTimeWindow = (timestamp: number, windowMs = 30 * 60 * 1000): num
     return Math.floor(timestamp / windowMs) * windowMs;
 };
 
-// Simple SHA-256 implementation using Web Crypto API
-async function sha256(message: string): Promise<string> {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-export const generateFingerprint = async (ip?: string): Promise<string> => {
+export const generateFingerprint = async (userAgent: string, ip?: string): Promise<string> => {
     if (!ip) {
         ip = await getPublicIp(); // Fetch public IP if not provided
     }
-    const os = extractOS(navigator.userAgent);
+    const os = extractOS(userAgent);
     const timeWindow = getTimeWindow(Date.now());
 
     const data = `${ip}|${os}|${timeWindow}`;

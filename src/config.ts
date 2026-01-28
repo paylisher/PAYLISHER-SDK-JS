@@ -3,6 +3,7 @@ export interface PaylisherConfig {
     dataStudioHost?: string; // e.g. https://ds.i.paylisher.com
     campaignHost?: string;   // e.g. https://api.usepublisher.com
     debug?: boolean;
+    platformAdapter?: any; // To avoid circular dependency in config, type is loose, but implementation enforces it
 }
 
 export const DEFAULT_CONFIG: Partial<PaylisherConfig> = {
