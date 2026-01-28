@@ -297,3 +297,228 @@ SDK'yı farklı ortamlar (Prodüksiyon, Test, On-Premise Müşteri) için derler
    ```
 
 Derlenen `paylisher.js` dosyası artık bu tanımladığınız sunuculara istek atacaktır.
+
+## On-Premise Deployment (Kurumsal Müşteriler için)
+
+On-premise müşterilere (örneğin bankalar, finans kurumları) SDK'yı deploy etmek için:
+
+### 1. Müşteriye Özel SDK Build
+
+**Yöntem A: Otomatik Build Script (Önerilen)**
+
+```bash
+# Interactive build script'i çalıştır
+./build-for-customer.sh
+
+# Script sizden şunları soracak:
+# - Müşteri adı (örn: akbank)
+# - DataStudio Host (örn: https://analytics.akbank.com)
+# - Campaign Host (örn: https://links.akbank.com)
+
+# Script otomatik olarak:
+# - .env dosyasını oluşturacak
+# - SDK'yı build edecek
+# - dist/MUSTERI_ADI/ klasörüne teslim edilebilir paket hazırlayacak
+```
+
+**Yöntem B: Manuel Build**
+
+```bash
+# .env dosyasını oluştur
+cat > .env << EOF
+DATA_STUDIO_HOST=https://analytics.bankaadi.com
+CAMPAIGN_HOST=https://links.bankaadi.com
+EOF
+
+# Build yap
+npm run build
+
+# dist/paylisher.min.js dosyası müşteriye özel sunucu adreslerine göre derlenmiş olacak
+```
+
+### 2. SDK Dosyasını Müşterinin Sunucusuna Deploy
+
+Build edilen `dist/paylisher.min.js` dosyasını müşterinin web sunucusuna yükleyin:
+
+```bash
+# Müşteri dosyayı şu path'e koyacak:
+# /var/www/html/assets/js/paylisher.min.js
+# veya
+# /public/scripts/paylisher.min.js
+```
+
+**Önemli:** SDK dosyasını CDN'e değil, müşterinin kendi domain'inden serve edin:
+- ✅ `https://banka.com/assets/js/paylisher.min.js`
+- ❌ `https://cdn.paylisher.com/paylisher.min.js`
+
+### 3. Web Sitesine Global Entegrasyon
+
+SDK'yı **her sayfaya ayrı ayrı eklemek yerine**, web sitesinin **global template/layout dosyasına tek seferlik** ekleyin.
+
+**Örnek: HTML Template/Master Page**
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Banka Web Sitesi</title>
+
+  <!-- Paylisher SDK - Global Head -->
+  <script src="/assets/js/paylisher.min.js"></script>
+  <script>
+    (function() {
+      function initPaylisher() {
+        if (typeof window.paylisher !== 'undefined') {
+          window.paylisher.init('phc_MUSTERI_API_KEY', {
+            dataStudioHost: 'https://analytics.bankaadi.com',
+            campaignHost: 'https://links.bankaadi.com',
+            debug: false // Production'da false olmalı
+          });
+
+          console.log('[Paylisher] SDK initialized');
+        } else {
+          setTimeout(initPaylisher, 100);
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPaylisher);
+      } else {
+        initPaylisher();
+      }
+    })();
+  </script>
+</head>
+<body>
+  <!-- Sayfa içeriği -->
+</body>
+</html>
+```
+
+**Örnek: JSP (Java Web Uygulaması)**
+
+```jsp
+<%-- layouts/main-layout.jsp --%>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>${pageTitle}</title>
+
+  <!-- Paylisher SDK -->
+  <script src="${pageContext.request.contextPath}/js/paylisher.min.js"></script>
+  <script>
+    paylisher.init('phc_MUSTERI_API_KEY', {
+      dataStudioHost: 'https://analytics.bankaadi.com',
+      campaignHost: 'https://links.bankaadi.com',
+      debug: false
+    });
+  </script>
+</head>
+<body>
+  <jsp:include page="/WEB-INF/jsp/${contentPage}.jsp" />
+</body>
+</html>
+```
+
+**Örnek: .NET MVC (C# Web Uygulaması)**
+
+```cshtml
+@* Views/Shared/_Layout.cshtml *@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>@ViewBag.Title</title>
+
+  <!-- Paylisher SDK -->
+  <script src="~/scripts/paylisher.min.js"></script>
+  <script>
+    paylisher.init('@Configuration["Paylisher:ApiKey"]', {
+      dataStudioHost: '@Configuration["Paylisher:DataStudioHost"]',
+      campaignHost: '@Configuration["Paylisher:CampaignHost"]',
+      debug: false
+    });
+  </script>
+</head>
+<body>
+  @RenderBody()
+</body>
+</html>
+```
+
+**Örnek: PHP (WordPress, Laravel, vb.)**
+
+```php
+<!-- themes/tema-adi/header.php veya layouts/app.blade.php -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title><?php echo $title; ?></title>
+
+  <!-- Paylisher SDK -->
+  <script src="<?php echo get_template_directory_uri(); ?>/js/paylisher.min.js"></script>
+  <script>
+    paylisher.init('<?php echo PAYLISHER_API_KEY; ?>', {
+      dataStudioHost: '<?php echo PAYLISHER_DATA_STUDIO_HOST; ?>',
+      campaignHost: '<?php echo PAYLISHER_CAMPAIGN_HOST; ?>',
+      debug: false
+    });
+  </script>
+</head>
+<body>
+  <?php echo $content; ?>
+</body>
+</html>
+```
+
+### 4. Custom Event Tracking (İsteğe Bağlı)
+
+SDK yüklendikten sonra, belirli sayfalarda veya kullanıcı aksiyonlarında custom event gönderebilirsiniz:
+
+```html
+<!-- Örnek: Kredi başvuru sayfası -->
+<script>
+  // Sayfa yüklendiğinde
+  paylisher.track('credit_application_page_viewed', {
+    credit_type: 'ihtiyac_kredisi',
+    amount: 50000
+  });
+
+  // Form submit olduğunda
+  document.getElementById('credit-form').addEventListener('submit', function(e) {
+    paylisher.track('credit_application_submitted', {
+      credit_type: 'ihtiyac_kredisi',
+      amount: document.getElementById('amount').value
+    });
+  });
+</script>
+```
+
+### 5. Güvenlik Önerileri
+
+- **API Key'i Environment Variable'da saklayın** (kodda hardcode etmeyin)
+- **HTTPS kullanın** (tüm SDK request'leri HTTPS üzerinden gitmeli)
+- **CSP (Content Security Policy) ayarlarını güncelleyin**:
+  ```
+  Content-Security-Policy: script-src 'self' 'unsafe-inline'; connect-src 'self' https://analytics.bankaadi.com https://links.bankaadi.com;
+  ```
+- **Production'da debug: false** yapın (console log'ları kapalı olsun)
+
+### 6. Test ve Doğrulama
+
+SDK'nın doğru çalıştığını doğrulamak için:
+
+1. **Browser Console'u açın** (F12)
+2. **Herhangi bir sayfayı ziyaret edin**
+3. **Console'da şu mesajı görmeli**:
+   ```
+   [Paylisher] SDK initialized
+   Paylisher: Tracking event { event: "$pageview", ... }
+   ```
+4. **Network tab'ında** `https://analytics.bankaadi.com/batch` endpoint'ine request gitmeli
+
+### 7. Müşteriye Teslim Edilecekler
+
+- ✅ `paylisher.min.js` - Build edilmiş SDK dosyası
+- ✅ API Key (DataStudio'dan oluşturulacak)
+- ✅ Integration dokümantasyonu (bu README)
+- ✅ Test senaryoları ve örnekleri
