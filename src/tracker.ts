@@ -1,6 +1,6 @@
 import { PaylisherConfig } from './config';
 import { post } from './utils/http';
-import { getUtmParams } from './utils/url';
+import { getUrlParams } from './utils/url';
 import { PlatformAdapter } from './platform/interface';
 
 // Simple UUID generator if uuid package isn't installed
@@ -60,7 +60,7 @@ export class Tracker {
             await this.initDistinctId();
         }
 
-        const utm = getUtmParams();
+        const urlParams = getUrlParams(); // All URL query parameters (utm_*, fbclid, gclid, etc.)
         const deviceInfo = await this.adapter.getDeviceInfo();
 
         // DataStudio uses /batch endpoint (same as mobile SDKs: iOS & Android)
@@ -75,7 +75,7 @@ export class Tracker {
                 $screen_height: deviceInfo.screenHeight,
                 $source: 'web', // Flag to indicate web origin
                 $is_web_sdk: true, // Additional explicit flag
-                ...utm,
+                ...urlParams, // Include all URL parameters for flexible attribution
                 ...properties,
             },
             timestamp: new Date().toISOString(),

@@ -1,7 +1,7 @@
 import { PaylisherConfig } from './config';
 import { generateFingerprint } from './fingerprint';
 import { post, get, getPublicIp } from './utils/http';
-import { getUtmParams } from './utils/url';
+import { getUrlParams } from './utils/url';
 import { PlatformAdapter } from './platform/interface';
 
 export class Campaign {
@@ -18,10 +18,10 @@ export class Campaign {
             const ip = await getPublicIp();
             const deviceInfo = await this.adapter.getDeviceInfo();
             const fingerprint = await generateFingerprint(deviceInfo.userAgent, ip);
-            const utm = getUtmParams(); // Safe (guarded)
+            const urlParams = getUrlParams(); // Captures all URL query parameters
 
-            // If campaignKey is missing, try to find it in UTM params
-            const effectiveCampaignKey = campaignKey || (utm ? utm['utm_campaign'] : undefined) || 'organic';
+            // If campaignKey is missing, try to find it in URL params
+            const effectiveCampaignKey = campaignKey || (urlParams ? urlParams['utm_campaign'] : undefined) || 'organic';
 
             const payload = {
                 fingerprint,
@@ -33,7 +33,7 @@ export class Campaign {
                 platform: deviceInfo.platform,
                 source: 'web', // Flag to indicate web origin
                 metadata: {
-                    ...(utm || {}),
+                    ...(urlParams || {}), // All URL params (utm_*, fbclid, gclid, ttclid, custom params, etc.)
                     ...(metadata || {}),
                     is_web_sdk: true, // Additional web SDK flag
                 },
