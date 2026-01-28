@@ -5,76 +5,52 @@ Paylisher Web SDK, web sitenizdeki kullanıcı etkileşimlerini takip etmek ve w
 ## Özellikler
 
 * **Analitik**: Sayfa görüntülemeleri ve özel etkinlikleri Paylisher DataStudio'ya gönderir.
-* **İlişkilendirme (Attribution)**: Ertelenmiş derin linkleme (Deferred Deep Linking) için "tıklama" ve "kurulum niyeti" verilerini işler.
+* **İlişkilendirme (Attribution)**: Ertelenmiş derin linkleme (Deferred Deep Linking) için "tıklama" kaydı ve eşleşme sorgulama işlemlerini destekler.
 * **Otomatik UTM Takibi**: URL'deki kampanya parametrelerini otomatik olarak algılar.
+* **Web Kaynak Tanımlama**: Tüm eventlerde `$source: 'web'` ve `$is_web_sdk: true` flag'leri ile web kaynaklı verileri işaretler.
 * **Hafif ve Hızlı**: Modern tarayıcılar için optimize edilmiştir.
 
 ## Kurulum
 
-### Web (JavaScript / TypeScript)
+### Web (JavaScript)
 
-Sayfanızın `<head>` etiketleri arasına aşağıdaki kodu ekleyin:
+DataStudio'ya veri göndermek için sayfanızın `<head>` etiketleri arasına aşağıdaki kodu ekleyin. Bu kod, SDK'yı asenkron olarak yükler ve `paylisher` global nesnesini başlatır.
 
 ```html
 <script>
-    !function(t,e){ ... (yukarıdaki snippet aynen kalır) ... 
+    !function(t,e){var o,n,p,r;e.__SV||(window.paylisher=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.paylisher.com","-assets.i.paylisher.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="paylisher",u.people=u.people||[],u.toString=function(t){var e="paylisher";return"paylisher"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init Re Ms Fs Pe Rs Cs capture Ve calculateEventProperties Ds register register_once register_for_session unregister unregister_for_session zs getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty Ls As createPersonProfile Ns Is Us opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing is_capturing clear_opt_in_out_capturing Os debug I js getPageViewId captureTraceFeedback captureTraceMetric".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.paylisher||[]);
+    
+    paylisher.init('phc_G0n3BSxS2uWyQmyfaFKPy8YNTxrkgxaGYWtp4NOlvsn', {
+        api_host: 'https://ds.i.paylisher.com',
+        defaults: '2025-05-24',
+        person_profiles: 'identified_only',
+    })
+</script>
 ```
 
 ### React Native
 
-React Native projelerinde SDK'yı npm paketi olarak proje bağımlılıklarına eklemeniz gerekir. Ayrıca gerekli adaptör kütüphanelerini de kurmalısınız.
+React Native projelerinde SDK'yı npm paketi olarak kullanmanız önerilir.
+
+**1. Kurulum**
+
+Gerekli paketleri projenize ekleyin:
 
 ```bash
 npm install paylisher-web-sdk @react-native-async-storage/async-storage react-native-device-info
 ```
 
-Kullanım (App.tsx veya ana dosyanızda):
+**2. Başlatma (Initialization)**
+
+Uygulamanızın giriş dosyasında (örneğin `App.tsx` veya `index.js`) SDK'yı başlatın:
 
 ```javascript
 import Paylisher from 'paylisher-web-sdk';
 
 // Uygulama açılışında başlatın
-Paylisher.init('API_ANAHTARINIZ', {
-    api_host: 'https://ds.i.paylisher.com', // Opsiyonel (Varsayılan: Prod)
-    campaignHost: 'https://link.usepublisher.com' // Opsiyonel
+Paylisher.init('phc_G0n3BSxS2uWyQmyfaFKPy8YNTxrkgxaGYWtp4NOlvsn', {
+    api_host: 'https://ds.i.paylisher.com', // Verilen DataStudio adresi
 });
-```
-
-        var o,n,p,r;e.__SV||(window.paylisher=e,e._i=[],e.init=function(i,s,a){
-            function g(t,e){
-                var o=e.split(".");
-                2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){
-                    t.push([e].concat(Array.prototype.slice.call(arguments,0)))
-                }
-            }
-            var u=e;
-            for(void 0!==a?u=e[a]=[]:a="paylisher",u.people=u.people||[],u.toString=function(t){
-                var e="paylisher";return"paylisher"!==a&&(e+="."+a),t||(e+=" (stub)"),e
-            },u.people.toString=function(){return u.toString(1)+".people (stub)"},
-            o="init track identify deferredDeepLink".split(" "),n=0;n<o.length;n++)g(u,o[n]);
-            e._i.push([i,s,a])
-        },e.__SV=1)
-    }(document,window.paylisher||[]);
-
-    // Paylisher'ı Başlatın
-    paylisher.init('API_ANAHTARINIZ', {
-        api_host: 'https://ds.i.paylisher.com',
-        // debug: true // Geliştirme aşamasında konsol çıktılarını görmek için açabilirsiniz
-    });
-    
-    // SDK Dosyasını Yükleyin
-    (function() {
-        var s = document.createElement("script");
-        s.type = "text/javascript";
-        s.async = true;
-        // NOT: Bu adres, SDK'nın deploy edildiği CDN Ingress adresidir.
-        // Prod: https://cdn.paylisher.com/sdk/v1/paylisher.min.js
-        // Test: https://cdn-test.paylisher.com/sdk/v1/paylisher.min.js
-        s.src = "https://cdn.paylisher.com/sdk/v1/paylisher.min.js"; 
-        var x = document.getElementsByTagName("script")[0];
-        x.parentNode.insertBefore(s, x);
-    })();
-</script>
 ```
 
 ## Kullanım
@@ -103,7 +79,7 @@ Kullanıcı giriş yaptığında:
 paylisher.identify('kullanici_id_12345');
 ```
 
-### 3. Ertelenmiş Derin Link (Web'den Uygulamaya)
+### 3. Ertelenmiş Derin Link Kaydı (Web'den Uygulamaya)
 
 Kullanıcı "Uygulamayı İndir" butonuna tıkladığında, bu tıklamayı kaydetmek ve kullanıcı uygulamayı yüklediğinde doğru yere yönlendirmek için:
 
@@ -111,11 +87,33 @@ Kullanıcı "Uygulamayı İndir" butonuna tıkladığında, bu tıklamayı kayde
 function onDownloadClick() {
   // 1. Tıklamayı kaydet (Kampanya sistemine niyet bildirir)
   paylisher.deferredDeepLink('paylisher://urun/detay/123', 'yaz_kampanyasi');
-  
+
   // 2. Ardından kullanıcıyı App Store / Play Store'a yönlendirin
-  window.location.href = "https://apps.apple.com/app/id..."; 
+  window.location.href = "https://apps.apple.com/app/id...";
 }
 ```
+
+### 4. Ertelenmiş Derin Link Sorgulama
+
+Bir cihaz için eşleşen ertelenmiş derin linki sorgulamak için (genellikle mobil uygulamalar tarafından kullanılır, ancak web'de de kullanılabilir):
+
+```javascript
+// Deferred deeplink sorgula
+paylisher.fetchDeferredDeeplink().then(result => {
+  if (result && result.matched) {
+    console.log('Eşleşen deeplink bulundu:', result.deeplink_url);
+    console.log('Kampanya:', result.campaign_key);
+    console.log('Metadata:', result.metadata);
+
+    // Kullanıcıyı ilgili sayfaya yönlendir
+    // window.location.href = result.deeplink_url;
+  } else {
+    console.log('Eşleşen deeplink bulunamadı');
+  }
+});
+```
+
+**Not:** Bu metod, cihazın fingerprint'ini kullanarak kampanya backend'inde eşleşme arar. Eğer daha önce bu cihazdan bir deeplink tıklaması kaydedilmişse, ilgili deeplink bilgilerini döndürür.
 
 ## Geliştirme
 

@@ -60,12 +60,12 @@ export class Tracker {
             await this.initDistinctId();
         }
 
-        const utm = getUtmParams(); // This handles window check internally? No, need to verify
+        const utm = getUtmParams();
         const deviceInfo = await this.adapter.getDeviceInfo();
 
-        // PostHog /capture/ format
-        const payload = {
-            api_key: this.config.apiKey,
+        // DataStudio uses /batch endpoint (same as mobile SDKs: iOS & Android)
+        // Payload format matches mobile SDK structure
+        const eventData = {
             event: event,
             properties: {
                 distinct_id: this.distinctId,
@@ -73,19 +73,27 @@ export class Tracker {
                 $lib_version: '1.1.0',
                 $screen_width: deviceInfo.screenWidth,
                 $screen_height: deviceInfo.screenHeight,
+                $source: 'web', // Flag to indicate web origin
+                $is_web_sdk: true, // Additional explicit flag
                 ...utm,
                 ...properties,
             },
             timestamp: new Date().toISOString(),
         };
 
+        const payload = {
+            api_key: this.config.apiKey,
+            batch: [eventData],
+            sent_at: new Date().toISOString(),
+        };
+
         if (this.config.debug) {
             console.log('Paylisher: Tracking event', payload);
         }
 
-        // DataStudio (PostHog) Endpoint
-        const url = `${this.config.dataStudioHost}/capture/`;
-        post(url, payload, true).catch(e => {
+        // DataStudio Endpoint (matches iOS & Android SDKs)
+        const url = `${this.config.dataStudioHost}/batch`;
+        post(url, payload, false).catch(e => {
             if (this.config.debug) console.error("Track error", e);
         });
     }

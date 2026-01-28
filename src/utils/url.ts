@@ -11,6 +11,10 @@ export const getUtmParams = (): Record<string, string> => {
         if (key.startsWith('utm_')) {
             params[key] = value;
         }
+        // Deeplink tracking params (added by redirect)
+        if (key === 'keyName' || key === 'jid') {
+            params[key] = value;
+        }
     });
 
     return params;

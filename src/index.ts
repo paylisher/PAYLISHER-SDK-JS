@@ -62,6 +62,16 @@ export class PaylisherSDK {
         this.track('install_intent_clicked', { deeplink_url: deeplinkUrl, campaign_key: campaignKey });
         await this.campaign.recordClick(deeplinkUrl, campaignKey);
     }
+
+    /**
+     * Fetch deferred deeplink match from campaign backend
+     * Used to check if there's a matching deeplink for this device
+     *
+     * @returns Promise<any> - Matched deeplink data or null
+     */
+    public async fetchDeferredDeeplink(): Promise<any> {
+        return await this.campaign.fetchDeferredDeeplink();
+    }
 }
 
 // Default export for Web (auto-instantiated)
