@@ -3,6 +3,7 @@ import { Tracker } from './tracker';
 import { Campaign } from './campaign';
 import { PlatformAdapter } from './platform/interface';
 import { WebPlatformAdapter } from './platform/web';
+import { getUrlParams } from './utils/url';
 
 export class PaylisherSDK {
     public config: PaylisherConfig;
@@ -48,10 +49,52 @@ export class PaylisherSDK {
 
         // Auto-track page view
         this.tracker.trackPageView();
+
+        // Auto-capture "Deep Link Opened" event (matches iOS/Android SDK behavior)
+        this.captureDeepLinkOpened();
     }
 
-    public track(event: string, properties?: any): void {
-        this.tracker.track(event, properties);
+    /**
+     * Automatically captures "Deep Link Opened" event if deeplink parameters are present
+     * Matches Android SDK auto-capture behavior
+     */
+    private captureDeepLinkOpened(): void {
+        const urlParams = getUrlParams();
+        const hasDeeplinkParams = urlParams['keyName'] || urlParams['jid'];
+
+        if (hasDeeplinkParams && typeof window !== 'undefined') {
+            const url = window.location.href;
+
+            // Event properties: url + all query parameters (same as Android SDK)
+            const eventProperties = {
+                url,
+                ...urlParams,
+            };
+
+            // User properties ($set): deeplink_key for person filtering
+            const userProperties = {
+                deeplink_key: urlParams['keyName'] || urlParams['jid'],
+            };
+
+            // User properties ($set_once): initial deeplink key
+            const userPropertiesSetOnce = {
+                $initial_deeplink_key: urlParams['keyName'] || urlParams['jid'],
+            };
+
+            this.tracker.track('Deep Link Opened', eventProperties, userProperties, userPropertiesSetOnce);
+
+            if (this.config.debug) {
+                console.log('Paylisher: Auto-captured Deep Link Opened event', {
+                    eventProperties,
+                    userProperties,
+                    userPropertiesSetOnce,
+                });
+            }
+        }
+    }
+
+    public track(event: string, properties?: any, userProperties?: any, userPropertiesSetOnce?: any): void {
+        this.tracker.track(event, properties, userProperties, userPropertiesSetOnce);
     }
 
     public identify(id: string): void {

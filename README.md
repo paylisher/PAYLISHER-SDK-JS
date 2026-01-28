@@ -6,8 +6,13 @@ Paylisher Web SDK, web sitenizdeki kullanıcı etkileşimlerini takip etmek ve w
 
 - **Analitik**: Sayfa görüntülemeleri ve özel etkinlikleri Paylisher DataStudio'ya gönderir.
 - **İlişkilendirme (Attribution)**: Ertelenmiş derin linkleme (Deferred Deep Linking) için "tıklama" kaydı ve eşleşme sorgulama işlemlerini destekler.
-- **Otomatik UTM Takibi**: URL'deki kampanya parametrelerini otomatik olarak algılar.
+- **Otomatik Deep Link Yakalama**: URL'de `keyName` veya `jid` parametresi varsa "Deep Link Opened" eventini otomatik olarak gönderir (iOS/Android SDK ile uyumlu).
+- **Esnek URL Parametre Takibi**: Tüm URL query parametrelerini otomatik olarak yakalar:
+  - UTM parametreleri (utm_source, utm_medium, utm_campaign, utm_term, utm_content)
+  - Platform click ID'leri (fbclid, gclid, ttclid, msclkid, twclid, etc.)
+  - Custom tracking parametreleri
 - **Web Kaynak Tanımlama**: Tüm eventlerde `$source: 'web'` ve `$is_web_sdk: true` flag'leri ile web kaynaklı verileri işaretler.
+- **User Properties ($set)**: Person property'leri güncelleme desteği.
 - **Hafif ve Hızlı**: Modern tarayıcılar için optimize edilmiştir.
 
 ## Kurulum
@@ -105,7 +110,34 @@ Paylisher.init("phc_G0n3BSxS2uWyQmyfaFKPy8YNTxrkgxaGYWtp4NOlvsn", {
 
 ## Kullanım
 
-### 1. Etkinlik Gönderme (Track)
+### 1. Otomatik Deep Link Yakalama
+
+SDK, sayfa yüklendiğinde URL'de `keyName` veya `jid` parametresi varsa otomatik olarak **"Deep Link Opened"** eventini gönderir. Bu davranış iOS ve Android SDK'larla uyumludur.
+
+**Örnek:**
+```
+https://your-site.com/landing?keyName=7iPAs&utm_source=facebook&fbclid=xxx
+```
+
+Bu URL'ye gelen bir kullanıcı için SDK otomatik olarak şu event'i gönderir:
+
+```javascript
+// Event: "Deep Link Opened"
+// Properties: {
+//   url: "https://your-site.com/landing?keyName=7iPAs&utm_source=facebook&fbclid=xxx",
+//   keyName: "7iPAs",
+//   utm_source: "facebook",
+//   fbclid: "xxx",
+//   ...
+// }
+// User Properties ($set): {
+//   deeplink_key: "7iPAs"
+// }
+```
+
+**deeplink_key** person property'si sayesinde Paylisher Dashboard'da user journey analizi yapılabilir.
+
+### 2. Etkinlik Gönderme (Track)
 
 Özel bir etkinliği takip etmek için:
 
@@ -119,9 +151,68 @@ paylisher.track("purchase", {
   currency: "TRY",
   item_id: "p-123",
 });
+
+// User properties ile birlikte (person property güncelleme)
+paylisher.track(
+  "subscription_started",
+  { plan: "premium", price: 29.99 }, // Event properties
+  { subscription_status: "active", plan_type: "premium" }, // $set (updates every time)
+  { $initial_plan: "premium" } // $set_once (only sets on first occurrence)
+);
 ```
 
-### 2. Kullanıcı Tanımlama (Identify)
+**Not:** SDK, iOS/Android SDK'larla uyumlu olarak her event'te otomatik olarak şu person properties'i gönderir:
+
+**Event Properties (Her event'te otomatik gönderilir):**
+- `$session_id` - Session ID (30 dakika timeout)
+- `$lib` - "paylisher-js-sdk"
+- `$lib_version` - SDK versiyonu
+- `$screen_width`, `$screen_height` - Ekran boyutları
+- `$device_type` - "Desktop", "Mobile", "Tablet"
+- `$device_manufacturer` - "Apple", "Google", "Microsoft", etc.
+- `$device_model` - Browser + version (örn: "Chrome 120.0")
+- `$device_name` - Browser adı (örn: "Chrome")
+- `$os` - İşletim sistemi (örn: "macOS", "Windows", "iPadOS")
+- `$os_name` - İşletim sistemi adı
+- `$os_version` - İşletim sistemi versiyonu (örn: "14.2")
+- `$browser` - Browser adı
+- `$browser_version` - Browser versiyonu
+- `$locale` - Dil kodu (örn: "tr-TR")
+- `$timezone` - Timezone (örn: "Europe/Istanbul")
+- `$source` - "web" (web kaynak flag'i)
+- `$is_web_sdk` - true (web SDK flag'i)
+
+**$set (Her event'te person property olarak güncellenir):**
+- Yukarıdaki tüm device/browser/OS bilgileri
+
+**$set_once (Sadece ilk kez set edilir):**
+- `$initial_*` prefix'li tüm yukarıdaki değerler (örn: `$initial_os`, `$initial_browser`)
+
+```javascript
+// Örnek event payload:
+{
+  event: "purchase",
+  properties: {
+    price: 99.9,
+    currency: "TRY",
+    // ... URL parametreleri
+    $set: {
+      $screen_width: 1920,
+      $screen_height: 1080,
+      $device_type: "Desktop",
+      $os: "web"
+    },
+    $set_once: {
+      $initial_screen_width: 1920,
+      $initial_screen_height: 1080,
+      $initial_device_type: "Desktop",
+      $initial_os: "web"
+    }
+  }
+}
+```
+
+### 3. Kullanıcı Tanımlama (Identify)
 
 Kullanıcı giriş yaptığında:
 
@@ -129,7 +220,7 @@ Kullanıcı giriş yaptığında:
 paylisher.identify("kullanici_id_12345");
 ```
 
-### 3. Ertelenmiş Derin Link Kaydı (Web'den Uygulamaya)
+### 4. Ertelenmiş Derin Link Kaydı (Web'den Uygulamaya)
 
 Kullanıcı "Uygulamayı İndir" butonuna tıkladığında, bu tıklamayı kaydetmek ve kullanıcı uygulamayı yüklediğinde doğru yere yönlendirmek için:
 
@@ -143,7 +234,7 @@ function onDownloadClick() {
 }
 ```
 
-### 4. Ertelenmiş Derin Link Sorgulama
+### 5. Ertelenmiş Derin Link Sorgulama
 
 Bir cihaz için eşleşen ertelenmiş derin linki sorgulamak için (genellikle mobil uygulamalar tarafından kullanılır, ancak web'de de kullanılabilir):
 

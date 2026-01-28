@@ -4,6 +4,18 @@ export interface DeviceInfo {
     screenHeight?: number;
     platform: 'web' | 'android' | 'ios';
     language?: string;
+
+    // Extended properties (matching iOS/Android SDK)
+    deviceType?: string; // "Desktop", "Mobile", "Tablet"
+    deviceManufacturer?: string; // "Apple", "Google", "Microsoft", etc.
+    deviceModel?: string; // Browser name and version
+    deviceName?: string; // Browser name
+    osName?: string; // "Windows", "macOS", "Linux", "iOS", "Android"
+    osVersion?: string; // OS version
+    browser?: string; // Browser name
+    browserVersion?: string; // Browser version
+    locale?: string; // Language code
+    timezone?: string; // Timezone (e.g., "Europe/Istanbul")
 }
 
 export interface PlatformAdapter {
