@@ -522,3 +522,113 @@ SDK'nın doğru çalıştığını doğrulamak için:
 - ✅ API Key (DataStudio'dan oluşturulacak)
 - ✅ Integration dokümantasyonu (bu README)
 - ✅ Test senaryoları ve örnekleri
+
+---
+
+## Docker Deployment
+
+Paylisher Web SDK, Docker ile containerized olarak deploy edilebilir. Bu, özellikle on-premise müşteriler ve çoklu ortam yönetimi için idealdir.
+
+### Hızlı Başlangıç
+
+```bash
+# 1. Build
+docker build \
+  --build-arg DATA_STUDIO_HOST=https://analytics.paylisher.com \
+  --build-arg CAMPAIGN_HOST=https://links.paylisher.com \
+  -f Dockerfile.improved \
+  -t paylisher/web-sdk:1.1.0 \
+  .
+
+# 2. Run
+docker run -d -p 8080:8080 --name paylisher-sdk paylisher/web-sdk:1.1.0
+
+# 3. Test
+curl http://localhost:8080/paylisher.min.js
+```
+
+### docker-compose ile Çoklu Ortam
+
+```bash
+# .env.docker dosyası oluştur
+cp .env.docker.example .env.docker
+
+# Development ortamını başlat
+docker-compose up -d sdk-dev
+
+# Test ortamını başlat
+docker-compose up -d sdk-test
+
+# Production ortamını başlat
+docker-compose up -d sdk-prod-saas
+```
+
+### Dockerfile Versiyonları
+
+Proje iki Dockerfile versiyonu içerir:
+
+1. **Dockerfile** - Basit versiyon (development için)
+2. **Dockerfile.improved** - Production-ready (önerilen)
+
+**Dockerfile.improved özellikleri:**
+- ✅ Non-root user (nginx-user UID 1001) - Security
+- ✅ Health checks (liveness + readiness probes)
+- ✅ CORS headers (cross-origin SDK loading)
+- ✅ Security headers (XSS, clickjacking protection)
+- ✅ Caching headers (browser cache optimization)
+- ✅ Gzip compression (%70 daha küçük dosya)
+- ✅ Metadata labels (version tracking)
+- ✅ Non-privileged port (8080)
+
+### Detaylı Dokümantasyon
+
+Docker deployment hakkında detaylı bilgi için:
+
+- [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md) - Deployment guide (build, Kubernetes, troubleshooting)
+- [DOCKER_DEEP_DIVE.md](DOCKER_DEEP_DIVE.md) - Derinlemesine teknik açıklama (rollup, CORS, networks, security)
+- [DOCKERFILE_COMPARISON.md](DOCKERFILE_COMPARISON.md) - Dockerfile vs Dockerfile.improved karşılaştırması
+
+### Kubernetes Deployment
+
+Kubernetes manifest'leri [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md#kubernetes-deployment) dosyasında mevcuttur.
+
+**Hızlı deploy:**
+```bash
+kubectl apply -f k8s/deployment.yaml
+kubectl get pods -n paylisher
+```
+
+### On-Premise Müşteriler İçin
+
+On-premise deployment için otomatik build script'i kullanın:
+
+```bash
+./build-for-customer.sh
+
+# Interactive script şunları sorar:
+# - Müşteri adı
+# - DataStudio Host
+# - Campaign Host
+
+# Output: dist/MUSTERI_ADI/
+#   - paylisher.min.js
+#   - paylisher.js
+#   - paylisher.esm.js
+#   - README.txt
+```
+
+### Health Check ve Monitoring
+
+```bash
+# Health status
+docker ps  # STATUS: healthy
+
+# Health endpoint
+curl http://localhost:8080/health
+
+# Logs
+docker logs -f paylisher-sdk
+
+# Metrics (Prometheus format - opsiyonel)
+curl http://localhost:8080/metrics
+```
