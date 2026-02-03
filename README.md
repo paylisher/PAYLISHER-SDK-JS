@@ -1,524 +1,448 @@
-# PAYLISHER-SDK-JS
+# Paylisher Web SDK
 
-Paylisher Web SDK, web sitenizdeki kullanıcı etkileşimlerini takip etmek ve web-mobil uygulama dönüşümlerini (attribution) yönetmek için geliştirilmiş hafif bir JavaScript kütüphanesidir.
+Web sitenizdeki kullanıcı etkileşimlerini takip etmek ve web-mobil uygulama dönüşümlerini (attribution) yönetmek için geliştirilmiş hafif bir JavaScript kütüphanesidir.
 
-## Özellikler
+## ✨ Özellikler
 
-- **Analitik**: Sayfa görüntülemeleri ve özel etkinlikleri Paylisher DataStudio'ya gönderir.
-- **İlişkilendirme (Attribution)**: Ertelenmiş derin linkleme (Deferred Deep Linking) için "tıklama" kaydı ve eşleşme sorgulama işlemlerini destekler.
-- **Otomatik Deep Link Yakalama**: URL'de `keyName` veya `jid` parametresi varsa "Deep Link Opened" eventini otomatik olarak gönderir (iOS/Android SDK ile uyumlu).
-- **Esnek URL Parametre Takibi**: Tüm URL query parametrelerini otomatik olarak yakalar:
-  - UTM parametreleri (utm_source, utm_medium, utm_campaign, utm_term, utm_content)
-  - Platform click ID'leri (fbclid, gclid, ttclid, msclkid, twclid, etc.)
-  - Custom tracking parametreleri
-- **Web Kaynak Tanımlama**: Tüm eventlerde `$source: 'web'` ve `$is_web_sdk: true` flag'leri ile web kaynaklı verileri işaretler.
-- **User Properties ($set)**: Person property'leri güncelleme desteği.
-- **Hafif ve Hızlı**: Modern tarayıcılar için optimize edilmiştir.
+- **📊 Analytics**: Sayfa görüntülemeleri ve custom event'leri Paylisher DataStudio'ya gönderir
+- **🔗 Attribution**: Deferred deep linking ile web-to-app dönüşüm tracking
+- **🚀 Auto-Capture**: URL'de `keyName` veya `jid` varsa "Deep Link Opened" event'i otomatik gönderir
+- **📱 Esnek URL Tracking**: UTM, fbclid, gclid, ttclid ve tüm custom parametreleri yakalar
+- **🎯 Person Properties**: $set/$set_once ile kullanıcı özelliklerini günceller
+- **⚡ Hafif**: Gzip ile ~5-7KB (minified)
 
-## Kurulum
+## 🚀 Hızlı Başlangıç
 
-### Web (JavaScript)
+### 1. Vanilla JavaScript Web Siteleri İçin
 
-DataStudio'ya veri göndermek için sayfanızın `<head>` etiketleri arasına aşağıdaki kodu ekleyin. Bu kod, SDK'yı asenkron olarak yükler ve `paylisher` global nesnesini başlatır.
+**Kullanım Senaryosu:** HTML/CSS/JavaScript web siteleri, WordPress, Squarespace, Wix
+
+**Entegrasyon Noktası:** Global `<head>` veya `<body>` sonunda (tüm sayfalarda)
+
+**⚠️ ÖNEMLİ:** Script'i sadece **GLOBAL TEMPLATE**'e (örn: `header.php`, `footer.php`, master layout) **BİR KERE** ekleyin. Tüm sayfalarda otomatik çalışır. Her sayfaya ayrı ayrı eklemenize GEREK YOK.
 
 ```html
-<script>
-  !(function (t, e) {
-    var o, n, p, r;
-    e.__SV ||
-      ((window.paylisher = e),
-      (e._i = []),
-      (e.init = function (i, s, a) {
-        function g(t, e) {
-          var o = e.split(".");
-          (2 == o.length && ((t = t[o[0]]), (e = o[1])),
-            (t[e] = function () {
-              t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
-            }));
-        }
-        (((p = t.createElement("script")).type = "text/javascript"),
-          (p.crossOrigin = "anonymous"),
-          (p.async = !0),
-          (p.src =
-            s.api_host.replace(".i.paylisher.com", "-assets.i.paylisher.com") +
-            "/static/array.js"),
-          (r = t.getElementsByTagName("script")[0]).parentNode.insertBefore(
-            p,
-            r,
-          ));
-        var u = e;
-        for (
-          void 0 !== a ? (u = e[a] = []) : (a = "paylisher"),
-            u.people = u.people || [],
-            u.toString = function (t) {
-              var e = "paylisher";
-              return (
-                "paylisher" !== a && (e += "." + a),
-                t || (e += " (stub)"),
-                e
-              );
-            },
-            u.people.toString = function () {
-              return u.toString(1) + ".people (stub)";
-            },
-            o =
-              "init Re Ms Fs Pe Rs Cs capture Ve calculateEventProperties Ds register register_once register_for_session unregister unregister_for_session zs getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty Ls As createPersonProfile Ns Is Us opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing is_capturing clear_opt_in_out_capturing Os debug I js getPageViewId captureTraceFeedback captureTraceMetric".split(
-                " ",
-              ),
-            n = 0;
-          n < o.length;
-          n++
-        )
-          g(u, o[n]);
-        e._i.push([i, s, a]);
-      }),
-      (e.__SV = 1));
-  })(document, window.paylisher || []);
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Website</title>
 
-  paylisher.init("phc_G0n3BSxS2uWyQmyfaFKPy8YNTxrkgxaGYWtp4NOlvsn", {
-    api_host: "https://ds.paylisher.com",
-    defaults: "2025-05-24",
-    person_profiles: "identified_only",
-  });
-</script>
+  <!-- Paylisher SDK -->
+  <script src="https://cdn.paylisher.com/paylisher.min.js"></script>
+  <script>
+    window.paylisher.init('YOUR_API_KEY', {
+      dataStudioHost: 'https://ds.paylisher.com',
+      campaignHost: 'https://links.paylisher.com',
+      debug: false
+    });
+
+    // Otomatik pageview tracking aktif
+    // Opsiyonel: Custom event tracking
+    document.getElementById('signup-btn')?.addEventListener('click', function() {
+      paylisher.track('signup_button_clicked', { page: 'homepage' });
+    });
+  </script>
+</head>
+<body>
+  <!-- Your content -->
+</body>
+</html>
 ```
 
-### React Native
+**WordPress için:**
+- Tema'nın `header.php` dosyasına ekle (tüm sayfalarda çalışır)
+- Veya plugin kullan: "Insert Headers and Footers"
 
-React Native projelerinde SDK'yı npm paketi olarak kullanmanız önerilir.
+---
 
-**1. Kurulum**
+### 2. Modern Framework'ler İçin (React, Vue, Next.js, React Native)
 
-Gerekli paketleri projenize ekleyin:
+**Kullanım Senaryosu:** React, Vue, Angular, Next.js, Nuxt.js, React Native uygulamaları
+
+#### A. React/Next.js
+
+**Entegrasyon Noktası:** Root component (`_app.tsx` veya `App.tsx`)
 
 ```bash
-npm install paylisher-web-sdk @react-native-async-storage/async-storage react-native-device-info
+npm install paylisher-sdk
 ```
 
-**2. Başlatma (Initialization)**
+**Next.js (_app.tsx):**
+```tsx
+// pages/_app.tsx
+import { useEffect } from 'react';
+import Paylisher from 'paylisher-sdk';
 
-Uygulamanızın giriş dosyasında (örneğin `App.tsx` veya `index.js`) SDK'yı başlatın:
+function MyApp({ Component, pageProps }) {
+  useEffect(() => {
+    Paylisher.init('YOUR_API_KEY', {
+      dataStudioHost: 'https://ds.paylisher.com',
+      campaignHost: 'https://links.paylisher.com'
+    });
+  }, []);
 
+  return <Component {...pageProps} />;
+}
+
+export default MyApp;
+```
+
+**React (App.tsx):**
+```tsx
+// src/App.tsx
+import { useEffect } from 'react';
+import Paylisher from 'paylisher-sdk';
+
+function App() {
+  useEffect(() => {
+    Paylisher.init('YOUR_API_KEY', {
+      dataStudioHost: 'https://ds.paylisher.com',
+      campaignHost: 'https://links.paylisher.com'
+    });
+  }, []);
+
+  return <div>Your App</div>;
+}
+```
+
+#### B. Vue/Nuxt.js
+
+**Entegrasyon Noktası:** Main entry (`main.js` veya `plugins/paylisher.js`)
+
+```bash
+npm install paylisher-sdk
+```
+
+**Vue (main.js):**
 ```javascript
-import Paylisher from "paylisher-web-sdk";
+import { createApp } from 'vue';
+import App from './App.vue';
+import Paylisher from 'paylisher-sdk';
 
-// Uygulama açılışında başlatın
-Paylisher.init("phc_G0n3BSxS2uWyQmyfaFKPy8YNTxrkgxaGYWtp4NOlvsn", {
-  api_host: "https://ds.i.paylisher.com", // Verilen DataStudio adresi
+Paylisher.init('YOUR_API_KEY', {
+  dataStudioHost: 'https://ds.paylisher.com',
+  campaignHost: 'https://links.paylisher.com'
+});
+
+createApp(App).mount('#app');
+```
+
+**Nuxt.js (plugins/paylisher.js):**
+```javascript
+import Paylisher from 'paylisher-sdk';
+
+export default defineNuxtPlugin(() => {
+  Paylisher.init('YOUR_API_KEY', {
+    dataStudioHost: 'https://ds.paylisher.com',
+    campaignHost: 'https://links.paylisher.com'
+  });
 });
 ```
 
-## Kullanım
+#### C. React Native
 
-### 1. Otomatik Deep Link Yakalama
+**Entegrasyon Noktası:** App root (`App.tsx`)
 
-SDK, sayfa yüklendiğinde URL'de `keyName` veya `jid` parametresi varsa otomatik olarak **"Deep Link Opened"** eventini gönderir. Bu davranış iOS ve Android SDK'larla uyumludur.
-
-**Örnek:**
-```
-https://your-site.com/landing?keyName=7iPAs&utm_source=facebook&fbclid=xxx
+```bash
+npm install paylisher-sdk
+npm install @react-native-async-storage/async-storage react-native-device-info
 ```
 
-Bu URL'ye gelen bir kullanıcı için SDK otomatik olarak şu event'i gönderir:
+```tsx
+// App.tsx
+import { useEffect } from 'react';
+import Paylisher from 'paylisher-sdk';
+
+export default function App() {
+  useEffect(() => {
+    Paylisher.init('YOUR_API_KEY', {
+      dataStudioHost: 'https://ds.paylisher.com',
+      campaignHost: 'https://links.paylisher.com'
+    });
+  }, []);
+
+  return <YourApp />;
+}
+```
+
+---
+
+## 📚 Event Tracking
+
+### Basit Event
 
 ```javascript
-// Event: "Deep Link Opened"
-// Properties: {
-//   url: "https://your-site.com/landing?keyName=7iPAs&utm_source=facebook&fbclid=xxx",
-//   keyName: "7iPAs",
-//   utm_source: "facebook",
-//   fbclid: "xxx",
-//   ...
-// }
-// User Properties ($set): {
-//   deeplink_key: "7iPAs"
-// }
+paylisher.track('purchase_completed');
 ```
 
-**deeplink_key** person property'si sayesinde Paylisher Dashboard'da user journey analizi yapılabilir.
-
-### 2. Etkinlik Gönderme (Track)
-
-Özel bir etkinliği takip etmek için:
+### Properties ile Event
 
 ```javascript
-// Basit etkinlik
-paylisher.track("signup_button_clicked");
-
-// Özelliklerle birlikte
-paylisher.track("purchase", {
-  price: 99.9,
-  currency: "TRY",
-  item_id: "p-123",
+paylisher.track('purchase_completed', {
+  amount: 99.99,
+  currency: 'TRY',
+  product_id: '12345',
+  category: 'electronics'
 });
+```
 
-// User properties ile birlikte (person property güncelleme)
-paylisher.track(
-  "subscription_started",
-  { plan: "premium", price: 29.99 }, // Event properties
-  { subscription_status: "active", plan_type: "premium" }, // $set (updates every time)
-  { $initial_plan: "premium" } // $set_once (only sets on first occurrence)
+### Person Properties ile Event
+
+```javascript
+paylisher.track('user_signed_up',
+  { plan: 'premium' },  // Event properties
+  { 
+    email: 'user@example.com',  // $set (her seferinde güncelle)
+    name: 'John Doe',
+    subscription_tier: 'premium'
+  },
+  { 
+    signup_date: '2026-02-03',  // $set_once (ilk seferinde set et)
+    initial_referrer: 'google'
+  }
 );
 ```
 
-**Not:** SDK, iOS/Android SDK'larla uyumlu olarak her event'te otomatik olarak şu person properties'i gönderir:
+---
 
-**Event Properties (Her event'te otomatik gönderilir):**
-- `$session_id` - Session ID (30 dakika timeout)
-- `$lib` - "paylisher-js-sdk"
-- `$lib_version` - SDK versiyonu
-- `$screen_width`, `$screen_height` - Ekran boyutları
-- `$device_type` - "Desktop", "Mobile", "Tablet"
-- `$device_manufacturer` - "Apple", "Google", "Microsoft", etc.
-- `$device_model` - Browser + version (örn: "Chrome 120.0")
-- `$device_name` - Browser adı (örn: "Chrome")
-- `$os` - İşletim sistemi (örn: "macOS", "Windows", "iPadOS")
-- `$os_name` - İşletim sistemi adı
-- `$os_version` - İşletim sistemi versiyonu (örn: "14.2")
-- `$browser` - Browser adı
-- `$browser_version` - Browser versiyonu
-- `$locale` - Dil kodu (örn: "tr-TR")
-- `$timezone` - Timezone (örn: "Europe/Istanbul")
-- `$source` - "web" (web kaynak flag'i)
-- `$is_web_sdk` - true (web SDK flag'i)
+## 🔗 Deferred Deep Link
 
-**$set (Her event'te person property olarak güncellenir):**
-- Yukarıdaki tüm device/browser/OS bilgileri
+**Senaryo:** Kullanıcı web sitesinde bir linke tıklıyor, app'i yüklüyor, app açılınca doğru sayfaya yönleniyor.
 
-**$set_once (Sadece ilk kez set edilir):**
-- `$initial_*` prefix'li tüm yukarıdaki değerler (örn: `$initial_os`, `$initial_browser`)
-
+**Web sitesinde:**
 ```javascript
-// Örnek event payload:
-{
-  event: "purchase",
-  properties: {
-    price: 99.9,
-    currency: "TRY",
-    // ... URL parametreleri
-    $set: {
-      $screen_width: 1920,
-      $screen_height: 1080,
-      $device_type: "Desktop",
-      $os: "web"
-    },
-    $set_once: {
-      $initial_screen_width: 1920,
-      $initial_screen_height: 1080,
-      $initial_device_type: "Desktop",
-      $initial_os: "web"
-    }
-  }
-}
-```
+// "Install App" butonuna tıklandığında
+document.getElementById('install-btn').addEventListener('click', async () => {
+  // Deep link kaydı oluştur
+  await paylisher.campaign.recordClick(
+    'https://app.example.com/promo/summer',  // Deep link URL
+    'summer-campaign-2026'  // Campaign key
+  );
 
-### 3. Kullanıcı Tanımlama (Identify)
-
-Kullanıcı giriş yaptığında:
-
-```javascript
-paylisher.identify("kullanici_id_12345");
-```
-
-### 4. Ertelenmiş Derin Link Kaydı (Web'den Uygulamaya)
-
-Kullanıcı "Uygulamayı İndir" butonuna tıkladığında, bu tıklamayı kaydetmek ve kullanıcı uygulamayı yüklediğinde doğru yere yönlendirmek için:
-
-```javascript
-function onDownloadClick() {
-  // 1. Tıklamayı kaydet (Kampanya sistemine niyet bildirir)
-  paylisher.deferredDeepLink("paylisher://urun/detay/123", "yaz_kampanyasi");
-
-  // 2. Ardından kullanıcıyı App Store / Play Store'a yönlendirin
-  window.location.href = "https://apps.apple.com/app/id...";
-}
-```
-
-### 5. Ertelenmiş Derin Link Sorgulama
-
-Bir cihaz için eşleşen ertelenmiş derin linki sorgulamak için (genellikle mobil uygulamalar tarafından kullanılır, ancak web'de de kullanılabilir):
-
-```javascript
-// Deferred deeplink sorgula
-paylisher.fetchDeferredDeeplink().then((result) => {
-  if (result && result.matched) {
-    console.log("Eşleşen deeplink bulundu:", result.deeplink_url);
-    console.log("Kampanya:", result.campaign_key);
-    console.log("Metadata:", result.metadata);
-
-    // Kullanıcıyı ilgili sayfaya yönlendir
-    // window.location.href = result.deeplink_url;
-  } else {
-    console.log("Eşleşen deeplink bulunamadı");
-  }
+  // App Store'a yönlendir
+  window.location.href = 'https://apps.apple.com/app/your-app';
 });
 ```
 
-**Not:** Bu metod, cihazın fingerprint'ini kullanarak kampanya backend'inde eşleşme arar. Eğer daha önce bu cihazdan bir deeplink tıklaması kaydedilmişse, ilgili deeplink bilgilerini döndürür.
+**Mobile app'te (iOS/Android/React Native):**
+```javascript
+// App ilk açıldığında
+const result = await paylisher.campaign.fetchDeferredDeeplink();
 
-## Geliştirme
+if (result.matched) {
+  console.log('Matched deeplink:', result.deeplink_url);
+  // Navigate: https://app.example.com/promo/summer
+  navigation.navigate('PromoScreen', { campaign: 'summer' });
+}
+```
 
-Projeyi yerel ortamda geliştirmek için:
+---
+
+## 🛠️ Development
+
+### Lokal Build
 
 ```bash
-# Bağımlılıkları yükle
 npm install
+npm run build
+# Output: dist/paylisher.min.js
+```
 
-# Derle (Build)
+### Environment Configuration
+
+```bash
+cp .env.example .env
+```
+
+```env
+DATA_STUDIO_HOST=http://localhost:8000
+CAMPAIGN_HOST=http://localhost:4040
+```
+
+```bash
 npm run build
 ```
 
-Çıktı dosyaları `dist/` klasöründe oluşturulacaktır. `dist/paylisher.min.js` dosyasını sunucunuza yükleyerek kullanabilirsiniz.
+---
 
-## İnşa Yapılandırması (Build Configuration)
+## 🐳 Docker Deployment
 
-SDK'yı farklı ortamlar (Prodüksiyon, Test, On-Premise Müşteri) için derlerken hedef sunucu adreslerini `.env` dosyası ile değiştirebilirsiniz.
-
-1. `.env.example` dosyasını `.env` olarak kopyalayın:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-2. `.env` dosyasını düzenleyerek hedef sunucu adreslerini girin:
-
-   ```env
-   # Analitik Sunucusu (DataStudio)
-   DATA_STUDIO_HOST=https://datastudio.musteri-domain.com
-
-   # Kampanya & Link Sunucusu
-   CAMPAIGN_HOST=https://link.musteri-domain.com
-   ```
-
-3. SDK'yı derleyin:
-
-   ```bash
-   npm run build
-   ```
-
-Derlenen `paylisher.js` dosyası artık bu tanımladığınız sunuculara istek atacaktır.
-
-## On-Premise Deployment (Kurumsal Müşteriler için)
-
-On-premise müşterilere (örneğin bankalar, finans kurumları) SDK'yı deploy etmek için:
-
-### 1. Müşteriye Özel SDK Build
-
-**Yöntem A: Otomatik Build Script (Önerilen)**
+### Quick Start
 
 ```bash
-# Interactive build script'i çalıştır
+docker build \
+  --build-arg DATA_STUDIO_HOST=https://ds.paylisher.com \
+  --build-arg CAMPAIGN_HOST=https://links.paylisher.com \
+  -f Dockerfile.improved \
+  -t paylisher-sdk:1.1.0 \
+  .
+
+docker run -d -p 8080:8080 paylisher-sdk:1.1.0
+curl http://localhost:8080/paylisher.min.js
+```
+
+### docker-compose (Multi-Environment)
+
+```bash
+cp .env.docker.example .env.docker
+
+# Development
+docker-compose up -d sdk-dev
+
+# Test
+docker-compose up -d sdk-test
+
+# Production
+docker-compose up -d sdk-prod-saas
+```
+
+---
+
+## 🏢 Deployment Modelleri
+
+### SaaS (Software as a Service)
+
+**Kullanım:** Tekil müşteriler (e-ticaret siteleri, küçük-orta ölçekli işletmeler)
+
+**SDK Kaynağı:**
+```html
+<script src="https://cdn.paylisher.com/paylisher.min.js"></script>
+```
+
+**Veri Akışı:**
+- SDK: Paylisher CDN'den yüklenir (`cdn.paylisher.com`)
+- Analytics: Paylisher DataStudio'ya gönderilir (`ds.paylisher.com`)
+- Campaign: Paylisher Campaign sunucusuna gönderilir (`links.paylisher.com`)
+
+**Avantajlar:**
+- Hızlı kurulum
+- Otomatik güncellemeler
+- Paylisher tarafından yönetilir
+
+---
+
+### On-Premise
+
+**Kullanım:** Kurumsal müşteriler (örn: A Bankası, B Bankası) - Veri gizliliği/güvenlik gereksinimleri
+
+**SDK Kaynağı:**
+```html
+<script src="https://banka-a.com/paylisher.min.js"></script>
+```
+
+**Veri Akışı:**
+- SDK: Müşterinin kendi sunucusundan yüklenir (`banka-a.com`)
+- Analytics: Müşterinin kendi DataStudio'suna gönderilir (`analytics.banka-a.com`)
+- Campaign: Müşterinin kendi Campaign sunucusuna gönderilir (`links.banka-a.com`)
+
+**Build:**
+```bash
+# Otomatik build script
 ./build-for-customer.sh
 
-# Script sizden şunları soracak:
-# - Müşteri adı (örn: akbank)
-# - DataStudio Host (örn: https://analytics.akbank.com)
-# - Campaign Host (örn: https://links.akbank.com)
+# Interactive input:
+# - Müşteri adı (örn: banka-a)
+# - DataStudio Host (örn: https://analytics.banka-a.com)
+# - Campaign Host (örn: https://links.banka-a.com)
 
-# Script otomatik olarak:
-# - .env dosyasını oluşturacak
-# - SDK'yı build edecek
-# - dist/MUSTERI_ADI/ klasörüne teslim edilebilir paket hazırlayacak
+# Output: dist/banka-a/
+#   - paylisher.min.js (müşteri sunucusuna deploy edilir)
+#   - Integration guide
 ```
 
-**Yöntem B: Manuel Build**
+**Avantajlar:**
+- Veri müşterinin kendi sunucusunda kalır
+- Tam kontrol ve özelleştirme
+- Compliance gereksinimleri (KVKK, GDPR)
+
+---
+
+## 📖 Detaylı Dokümantasyon
+
+Kapsamlı dokümantasyon: [paylisher.backend.docs/web-sdk](https://github.com/softmarketsolution/paylisher.backend.docs/tree/main/web-sdk)
+
+### Dokümantasyon İndeksi
+
+- **[TESTING.md](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/TESTING.md)** - Test senaryoları, DevOps guide
+- **[SECURITY.md](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/SECURITY.md)** - Güvenlik best practices
+- **[FAQ.md](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/FAQ.md)** - Sıkça sorulan sorular
+- **[DOCKER_DEEP_DIVE.md](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/DOCKER_DEEP_DIVE.md)** - Docker derinlemesine
+- **[architecture.md](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/architecture.md)** - SDK mimarisi
+
+### CI/CD
+
+- **[Jenkinsfile](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/Jenkinsfile)** - Multi-environment pipeline
+
+---
+
+## 🏗️ Proje Yapısı
+
+```
+paylisher-sdk-js/
+├── src/                    # TypeScript source
+│   ├── index.ts           # Main entry
+│   ├── tracker.ts         # Event tracking
+│   ├── campaign.ts        # Deferred deeplink
+│   └── platform/          # Platform adapters
+├── dist/                   # Build output
+│   ├── paylisher.min.js   # UMD minified (production)
+│   ├── paylisher.js       # UMD (development)
+│   └── paylisher.esm.js   # ES Module
+├── Dockerfile.improved     # Production Docker
+├── docker-compose.yml      # Multi-environment
+├── rollup.config.mjs      # Bundler config
+└── build-for-customer.sh  # On-premise build
+```
+
+---
+
+## 🧪 Test
 
 ```bash
-# .env dosyasını oluştur
-cat > .env << EOF
-DATA_STUDIO_HOST=https://analytics.bankaadi.com
-CAMPAIGN_HOST=https://links.bankaadi.com
-EOF
-
-# Build yap
+# Lokal test
 npm run build
+python3 -m http.server 8080
+open http://localhost:8080/test.html
 
-# dist/paylisher.min.js dosyası müşteriye özel sunucu adreslerine göre derlenmiş olacak
+# Docker test
+docker-compose up -d sdk-dev
+curl http://localhost:8081/health
 ```
 
-### 2. SDK Dosyasını Müşterinin Sunucusuna Deploy
+Test senaryoları: [TESTING.md](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/TESTING.md)
 
-Build edilen `dist/paylisher.min.js` dosyasını müşterinin web sunucusuna yükleyin:
+---
+
+## 📦 Build Output
+
+| File | Format | Size | Kullanım |
+|------|--------|------|----------|
+| `paylisher.min.js` | UMD | ~5-7KB (gzip) | Production (HTML `<script>`) |
+| `paylisher.js` | UMD | ~40KB | Development |
+| `paylisher.esm.js` | ESM | ~40KB | Modern bundlers |
+
+---
+
+## 🤝 Katkıda Bulunma
 
 ```bash
-# Müşteri dosyayı şu path'e koyacak:
-# /var/www/html/assets/js/paylisher.min.js
-# veya
-# /public/scripts/paylisher.min.js
+git clone https://github.com/paylisher/PAYLISHER-SDK-JS.git
+git checkout -b feature/amazing-feature
+git commit -m "feat: add amazing feature"
+git push origin feature/amazing-feature
+# Pull Request aç
 ```
 
-**Önemli:** SDK dosyasını CDN'e değil, müşterinin kendi domain'inden serve edin:
-- ✅ `https://banka.com/assets/js/paylisher.min.js`
-- ❌ `https://cdn.paylisher.com/paylisher.min.js`
+---
 
-### 3. Web Sitesine Global Entegrasyon
+## 📄 Lisans
 
-SDK'yı **her sayfaya ayrı ayrı eklemek yerine**, web sitesinin **global template/layout dosyasına tek seferlik** ekleyin.
+ISC
 
-**Örnek: HTML Template/Master Page**
+---
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Banka Web Sitesi</title>
+## 🆘 Destek
 
-  <!-- Paylisher SDK - Global Head -->
-  <script src="/assets/js/paylisher.min.js"></script>
-  <script>
-    (function() {
-      function initPaylisher() {
-        if (typeof window.paylisher !== 'undefined') {
-          window.paylisher.init('phc_MUSTERI_API_KEY', {
-            dataStudioHost: 'https://analytics.bankaadi.com',
-            campaignHost: 'https://links.bankaadi.com',
-            debug: false // Production'da false olmalı
-          });
-
-          console.log('[Paylisher] SDK initialized');
-        } else {
-          setTimeout(initPaylisher, 100);
-        }
-      }
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initPaylisher);
-      } else {
-        initPaylisher();
-      }
-    })();
-  </script>
-</head>
-<body>
-  <!-- Sayfa içeriği -->
-</body>
-</html>
-```
-
-**Örnek: JSP (Java Web Uygulaması)**
-
-```jsp
-<%-- layouts/main-layout.jsp --%>
-<!DOCTYPE html>
-<html>
-<head>
-  <title>${pageTitle}</title>
-
-  <!-- Paylisher SDK -->
-  <script src="${pageContext.request.contextPath}/js/paylisher.min.js"></script>
-  <script>
-    paylisher.init('phc_MUSTERI_API_KEY', {
-      dataStudioHost: 'https://analytics.bankaadi.com',
-      campaignHost: 'https://links.bankaadi.com',
-      debug: false
-    });
-  </script>
-</head>
-<body>
-  <jsp:include page="/WEB-INF/jsp/${contentPage}.jsp" />
-</body>
-</html>
-```
-
-**Örnek: .NET MVC (C# Web Uygulaması)**
-
-```cshtml
-@* Views/Shared/_Layout.cshtml *@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>@ViewBag.Title</title>
-
-  <!-- Paylisher SDK -->
-  <script src="~/scripts/paylisher.min.js"></script>
-  <script>
-    paylisher.init('@Configuration["Paylisher:ApiKey"]', {
-      dataStudioHost: '@Configuration["Paylisher:DataStudioHost"]',
-      campaignHost: '@Configuration["Paylisher:CampaignHost"]',
-      debug: false
-    });
-  </script>
-</head>
-<body>
-  @RenderBody()
-</body>
-</html>
-```
-
-**Örnek: PHP (WordPress, Laravel, vb.)**
-
-```php
-<!-- themes/tema-adi/header.php veya layouts/app.blade.php -->
-<!DOCTYPE html>
-<html>
-<head>
-  <title><?php echo $title; ?></title>
-
-  <!-- Paylisher SDK -->
-  <script src="<?php echo get_template_directory_uri(); ?>/js/paylisher.min.js"></script>
-  <script>
-    paylisher.init('<?php echo PAYLISHER_API_KEY; ?>', {
-      dataStudioHost: '<?php echo PAYLISHER_DATA_STUDIO_HOST; ?>',
-      campaignHost: '<?php echo PAYLISHER_CAMPAIGN_HOST; ?>',
-      debug: false
-    });
-  </script>
-</head>
-<body>
-  <?php echo $content; ?>
-</body>
-</html>
-```
-
-### 4. Custom Event Tracking (İsteğe Bağlı)
-
-SDK yüklendikten sonra, belirli sayfalarda veya kullanıcı aksiyonlarında custom event gönderebilirsiniz:
-
-```html
-<!-- Örnek: Kredi başvuru sayfası -->
-<script>
-  // Sayfa yüklendiğinde
-  paylisher.track('credit_application_page_viewed', {
-    credit_type: 'ihtiyac_kredisi',
-    amount: 50000
-  });
-
-  // Form submit olduğunda
-  document.getElementById('credit-form').addEventListener('submit', function(e) {
-    paylisher.track('credit_application_submitted', {
-      credit_type: 'ihtiyac_kredisi',
-      amount: document.getElementById('amount').value
-    });
-  });
-</script>
-```
-
-### 5. Güvenlik Önerileri
-
-- **API Key'i Environment Variable'da saklayın** (kodda hardcode etmeyin)
-- **HTTPS kullanın** (tüm SDK request'leri HTTPS üzerinden gitmeli)
-- **CSP (Content Security Policy) ayarlarını güncelleyin**:
-  ```
-  Content-Security-Policy: script-src 'self' 'unsafe-inline'; connect-src 'self' https://analytics.bankaadi.com https://links.bankaadi.com;
-  ```
-- **Production'da debug: false** yapın (console log'ları kapalı olsun)
-
-### 6. Test ve Doğrulama
-
-SDK'nın doğru çalıştığını doğrulamak için:
-
-1. **Browser Console'u açın** (F12)
-2. **Herhangi bir sayfayı ziyaret edin**
-3. **Console'da şu mesajı görmeli**:
-   ```
-   [Paylisher] SDK initialized
-   Paylisher: Tracking event { event: "$pageview", ... }
-   ```
-4. **Network tab'ında** `https://analytics.bankaadi.com/batch` endpoint'ine request gitmeli
-
-### 7. Müşteriye Teslim Edilecekler
-
-- ✅ `paylisher.min.js` - Build edilmiş SDK dosyası
-- ✅ API Key (DataStudio'dan oluşturulacak)
-- ✅ Integration dokümantasyonu (bu README)
-- ✅ Test senaryoları ve örnekleri
+- **Dokümantasyon**: [paylisher.backend.docs/web-sdk](https://github.com/softmarketsolution/paylisher.backend.docs/tree/main/web-sdk)
+- **Issues**: [GitHub Issues](https://github.com/paylisher/PAYLISHER-SDK-JS/issues)
+- **Email**: support@paylisher.com
