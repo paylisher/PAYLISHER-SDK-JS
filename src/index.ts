@@ -1,17 +1,24 @@
 import { PaylisherConfig, DEFAULT_CONFIG } from './config';
 import { Tracker } from './tracker';
 import { Campaign } from './campaign';
+import { PlatformAdapter } from './platform/interface';
+import { WebPlatformAdapter } from './platform/web';
+import { getUrlParams } from './utils/url';
 
-class PaylisherSDK {
+export class PaylisherSDK {
     public config: PaylisherConfig;
     private tracker: Tracker;
     private campaign: Campaign;
+    private adapter: PlatformAdapter;
     private initialized = false;
 
-    constructor() {
+    constructor(adapter?: PlatformAdapter) {
         this.config = DEFAULT_CONFIG as PaylisherConfig;
-        this.tracker = new Tracker(this.config);
-        this.campaign = new Campaign(this.config);
+        this.adapter = adapter || new WebPlatformAdapter();
+        this.config.platformAdapter = this.adapter;
+
+        this.tracker = new Tracker(this.config, this.adapter);
+        this.campaign = new Campaign(this.config, this.adapter);
     }
 
     public init(apiKey: string, config: Partial<PaylisherConfig> = {}): void {
@@ -27,8 +34,13 @@ class PaylisherSDK {
         }
 
         this.config = { ...DEFAULT_CONFIG, ...config, apiKey };
-        this.tracker = new Tracker(this.config);
-        this.campaign = new Campaign(this.config);
+        // If config passed a new adapter, use it, otherwise keep default
+        if (config.platformAdapter) {
+            this.adapter = config.platformAdapter;
+        }
+
+        this.tracker = new Tracker(this.config, this.adapter);
+        this.campaign = new Campaign(this.config, this.adapter);
         this.initialized = true;
 
         if (this.config.debug) {
@@ -37,10 +49,52 @@ class PaylisherSDK {
 
         // Auto-track page view
         this.tracker.trackPageView();
+
+        // Auto-capture "Deep Link Opened" event (matches iOS/Android SDK behavior)
+        this.captureDeepLinkOpened();
     }
 
-    public track(event: string, properties?: any): void {
-        this.tracker.track(event, properties);
+    /**
+     * Automatically captures "Deep Link Opened" event if deeplink parameters are present
+     * Matches Android SDK auto-capture behavior
+     */
+    private captureDeepLinkOpened(): void {
+        const urlParams = getUrlParams();
+        const hasDeeplinkParams = urlParams['keyName'] || urlParams['jid'];
+
+        if (hasDeeplinkParams && typeof window !== 'undefined') {
+            const url = window.location.href;
+
+            // Event properties: url + all query parameters (same as Android SDK)
+            const eventProperties = {
+                url,
+                ...urlParams,
+            };
+
+            // User properties ($set): deeplink_key for person filtering
+            const userProperties = {
+                deeplink_key: urlParams['keyName'] || urlParams['jid'],
+            };
+
+            // User properties ($set_once): initial deeplink key
+            const userPropertiesSetOnce = {
+                $initial_deeplink_key: urlParams['keyName'] || urlParams['jid'],
+            };
+
+            this.tracker.track('Deep Link Opened', eventProperties, userProperties, userPropertiesSetOnce);
+
+            if (this.config.debug) {
+                console.log('Paylisher: Auto-captured Deep Link Opened event', {
+                    eventProperties,
+                    userProperties,
+                    userPropertiesSetOnce,
+                });
+            }
+        }
+    }
+
+    public track(event: string, properties?: any, userProperties?: any, userPropertiesSetOnce?: any): void {
+        this.tracker.track(event, properties, userProperties, userPropertiesSetOnce);
     }
 
     public identify(id: string): void {
@@ -51,27 +105,40 @@ class PaylisherSDK {
         this.track('install_intent_clicked', { deeplink_url: deeplinkUrl, campaign_key: campaignKey });
         await this.campaign.recordClick(deeplinkUrl, campaignKey);
     }
+
+    /**
+     * Fetch deferred deeplink match from campaign backend
+     * Used to check if there's a matching deeplink for this device
+     *
+     * @returns Promise<any> - Matched deeplink data or null
+     */
+    public async fetchDeferredDeeplink(): Promise<any> {
+        return await this.campaign.fetchDeferredDeeplink();
+    }
 }
 
-const paylisherInstance = new PaylisherSDK();
+// Default export for Web (auto-instantiated)
+const paylisherInstance = new PaylisherSDK(new WebPlatformAdapter());
 
-// --- Queue Draining Logic ---
-// The snippet creates: window.paylisher = { _i: [], init: ..., push: ... }
-const win = window as any;
-const existingStub = win.paylisher;
+// --- Queue Draining Logic (Web Only) ---
+if (typeof window !== 'undefined') {
+    // The snippet creates: window.paylisher = { _i: [], init: ..., push: ... }
+    const win = window as any;
+    const existingStub = win.paylisher;
 
-if (existingStub && Array.isArray(existingStub._i)) {
-    // Process the '_i' array which contains init arguments: [[apiKey, config, name]]
-    existingStub._i.forEach((args: any[]) => {
-        if (args.length >= 1) {
-            const apiKey = args[0];
-            const config = args[1] || {};
-            paylisherInstance.init(apiKey, config);
-        }
-    });
+    if (existingStub && Array.isArray(existingStub._i)) {
+        // Process the '_i' array which contains init arguments: [[apiKey, config, name]]
+        existingStub._i.forEach((args: any[]) => {
+            if (args.length >= 1) {
+                const apiKey = args[0];
+                const config = args[1] || {};
+                paylisherInstance.init(apiKey, config);
+            }
+        });
+    }
+
+    // Replace the stub with the real instance
+    win.paylisher = paylisherInstance;
 }
-
-// Replace the stub with the real instance
-win.paylisher = paylisherInstance;
 
 export default paylisherInstance;
