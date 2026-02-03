@@ -1,6 +1,6 @@
 # Paylisher Web SDK
 
-Paylisher Web SDK, web sitenizdeki kullanıcı etkileşimlerini takip etmek ve web-mobil uygulama dönüşümlerini (attribution) yönetmek için geliştirilmiş hafif bir JavaScript kütüphanesidir.
+Web sitenizdeki kullanıcı etkileşimlerini takip etmek ve web-mobil uygulama dönüşümlerini (attribution) yönetmek için geliştirilmiş hafif bir JavaScript kütüphanesidir.
 
 ## ✨ Özellikler
 
@@ -13,32 +13,108 @@ Paylisher Web SDK, web sitenizdeki kullanıcı etkileşimlerini takip etmek ve w
 
 ## 🚀 Hızlı Başlangıç
 
-### 1. HTML'e Ekle
+### 1. Vanilla JavaScript Web Siteleri İçin
 
-Web sitenizin `<head>` bölümüne:
+**Kullanım Senaryosu:** HTML/CSS/JavaScript web siteleri, WordPress, Squarespace, Wix
+
+**Entegrasyon Noktası:** Global `<head>` veya `<body>` sonunda (tüm sayfalarda)
 
 ```html
-<script src="https://cdn.paylisher.com/paylisher.min.js"></script>
-<script>
-  window.paylisher.init('YOUR_API_KEY', {
-    dataStudioHost: 'https://ds.paylisher.com',
-    campaignHost: 'https://links.paylisher.com',
-    debug: false  // Production'da false
-  });
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Website</title>
 
-  // Otomatik pageview tracking aktif
-  // Custom event tracking:
-  paylisher.track('button_clicked', { button: 'signup' });
-</script>
+  <!-- Paylisher SDK -->
+  <script src="https://cdn.paylisher.com/paylisher.min.js"></script>
+  <script>
+    window.paylisher.init('YOUR_API_KEY', {
+      dataStudioHost: 'https://ds.paylisher.com',
+      campaignHost: 'https://links.paylisher.com',
+      debug: false
+    });
+
+    // Otomatik pageview tracking aktif
+    // Opsiyonel: Custom event tracking
+    document.getElementById('signup-btn')?.addEventListener('click', function() {
+      paylisher.track('signup_button_clicked', { page: 'homepage' });
+    });
+  </script>
+</head>
+<body>
+  <!-- Your content -->
+</body>
+</html>
 ```
 
-### 2. npm ile Yükle (React/Vue/Next.js için)
+**WordPress için:**
+- Tema'nın `header.php` dosyasına ekle (tüm sayfalarda çalışır)
+- Veya plugin kullan: "Insert Headers and Footers"
+
+---
+
+### 2. Modern Framework'ler İçin (React, Vue, Next.js, React Native)
+
+**Kullanım Senaryosu:** React, Vue, Angular, Next.js, Nuxt.js, React Native uygulamaları
+
+#### A. React/Next.js
+
+**Entegrasyon Noktası:** Root component (`_app.tsx` veya `App.tsx`)
 
 ```bash
 npm install paylisher-sdk
 ```
 
+**Next.js (_app.tsx):**
+```tsx
+// pages/_app.tsx
+import { useEffect } from 'react';
+import Paylisher from 'paylisher-sdk';
+
+function MyApp({ Component, pageProps }) {
+  useEffect(() => {
+    Paylisher.init('YOUR_API_KEY', {
+      dataStudioHost: 'https://ds.paylisher.com',
+      campaignHost: 'https://links.paylisher.com'
+    });
+  }, []);
+
+  return <Component {...pageProps} />;
+}
+
+export default MyApp;
+```
+
+**React (App.tsx):**
+```tsx
+// src/App.tsx
+import { useEffect } from 'react';
+import Paylisher from 'paylisher-sdk';
+
+function App() {
+  useEffect(() => {
+    Paylisher.init('YOUR_API_KEY', {
+      dataStudioHost: 'https://ds.paylisher.com',
+      campaignHost: 'https://links.paylisher.com'
+    });
+  }, []);
+
+  return <div>Your App</div>;
+}
+```
+
+#### B. Vue/Nuxt.js
+
+**Entegrasyon Noktası:** Main entry (`main.js` veya `plugins/paylisher.js`)
+
+```bash
+npm install paylisher-sdk
+```
+
+**Vue (main.js):**
 ```javascript
+import { createApp } from 'vue';
+import App from './App.vue';
 import Paylisher from 'paylisher-sdk';
 
 Paylisher.init('YOUR_API_KEY', {
@@ -46,84 +122,137 @@ Paylisher.init('YOUR_API_KEY', {
   campaignHost: 'https://links.paylisher.com'
 });
 
-// Track event
-Paylisher.track('page_view');
+createApp(App).mount('#app');
 ```
 
-## 📚 Temel Kullanım
+**Nuxt.js (plugins/paylisher.js):**
+```javascript
+import Paylisher from 'paylisher-sdk';
 
-### Event Tracking
+export default defineNuxtPlugin(() => {
+  Paylisher.init('YOUR_API_KEY', {
+    dataStudioHost: 'https://ds.paylisher.com',
+    campaignHost: 'https://links.paylisher.com'
+  });
+});
+```
+
+#### C. React Native
+
+**Entegrasyon Noktası:** App root (`App.tsx`)
+
+```bash
+npm install paylisher-sdk
+npm install @react-native-async-storage/async-storage react-native-device-info
+```
+
+```tsx
+// App.tsx
+import { useEffect } from 'react';
+import Paylisher from 'paylisher-sdk';
+
+export default function App() {
+  useEffect(() => {
+    Paylisher.init('YOUR_API_KEY', {
+      dataStudioHost: 'https://ds.paylisher.com',
+      campaignHost: 'https://links.paylisher.com'
+    });
+  }, []);
+
+  return <YourApp />;
+}
+```
+
+---
+
+## 📚 Event Tracking
+
+### Basit Event
 
 ```javascript
-// Basit event
 paylisher.track('purchase_completed');
+```
 
-// Properties ile
+### Properties ile Event
+
+```javascript
 paylisher.track('purchase_completed', {
   amount: 99.99,
   currency: 'TRY',
-  product_id: '12345'
+  product_id: '12345',
+  category: 'electronics'
 });
+```
 
-// Person properties ile
+### Person Properties ile Event
+
+```javascript
 paylisher.track('user_signed_up',
   { plan: 'premium' },  // Event properties
-  { email: 'user@example.com', name: 'John Doe' },  // $set (update always)
-  { signup_date: '2026-02-03' }  // $set_once (first time only)
+  { 
+    email: 'user@example.com',  // $set (her seferinde güncelle)
+    name: 'John Doe',
+    subscription_tier: 'premium'
+  },
+  { 
+    signup_date: '2026-02-03',  // $set_once (ilk seferinde set et)
+    initial_referrer: 'google'
+  }
 );
 ```
 
-### Deferred Deep Link
+---
 
-**Web sitesinde (Campaign click):**
+## 🔗 Deferred Deep Link
+
+**Senaryo:** Kullanıcı web sitesinde bir linke tıklıyor, app'i yüklüyor, app açılınca doğru sayfaya yönleniyor.
+
+**Web sitesinde:**
 ```javascript
-// Kullanıcı "Install App" butonuna tıkladığında
+// "Install App" butonuna tıklandığında
 document.getElementById('install-btn').addEventListener('click', async () => {
+  // Deep link kaydı oluştur
   await paylisher.campaign.recordClick(
-    'https://app.example.com/promo',  // Deep link URL
-    'summer-campaign'  // Campaign key
+    'https://app.example.com/promo/summer',  // Deep link URL
+    'summer-campaign-2026'  // Campaign key
   );
 
   // App Store'a yönlendir
-  window.location.href = 'https://apps.apple.com/app/...';
+  window.location.href = 'https://apps.apple.com/app/your-app';
 });
 ```
 
-**Mobile app'te (İlk açılış):**
+**Mobile app'te (iOS/Android/React Native):**
 ```javascript
-// App ilk açıldığında deferred deeplink'i al
+// App ilk açıldığında
 const result = await paylisher.campaign.fetchDeferredDeeplink();
 
 if (result.matched) {
   console.log('Matched deeplink:', result.deeplink_url);
-  // Navigate to deeplink
+  // Navigate: https://app.example.com/promo/summer
+  navigation.navigate('PromoScreen', { campaign: 'summer' });
 }
 ```
+
+---
 
 ## 🛠️ Development
 
 ### Lokal Build
 
 ```bash
-# Dependencies
 npm install
-
-# Build
 npm run build
-
 # Output: dist/paylisher.min.js
 ```
 
 ### Environment Configuration
-
-`.env` dosyası oluştur:
 
 ```bash
 cp .env.example .env
 ```
 
 ```env
-# .env
 DATA_STUDIO_HOST=http://localhost:8000
 CAMPAIGN_HOST=http://localhost:4040
 ```
@@ -132,12 +261,13 @@ CAMPAIGN_HOST=http://localhost:4040
 npm run build
 ```
 
+---
+
 ## 🐳 Docker Deployment
 
 ### Quick Start
 
 ```bash
-# Build
 docker build \
   --build-arg DATA_STUDIO_HOST=https://ds.paylisher.com \
   --build-arg CAMPAIGN_HOST=https://links.paylisher.com \
@@ -145,17 +275,13 @@ docker build \
   -t paylisher-sdk:1.1.0 \
   .
 
-# Run
 docker run -d -p 8080:8080 paylisher-sdk:1.1.0
-
-# Test
 curl http://localhost:8080/paylisher.min.js
 ```
 
 ### docker-compose (Multi-Environment)
 
 ```bash
-# .env.docker oluştur
 cp .env.docker.example .env.docker
 
 # Development
@@ -168,67 +294,45 @@ docker-compose up -d sdk-test
 docker-compose up -d sdk-prod-saas
 ```
 
-**Dockerfile versiyonları:**
-- `Dockerfile` - Basit versiyon (development)
-- `Dockerfile.improved` - Production-ready ✅ (önerilen)
+---
 
 ## 🏢 On-Premise Deployment
 
-Kurumsal müşteriler (bankalar, finans kurumları) için:
+Kurumsal müşteriler (örn: A Bankası, B Bankası) için:
 
 ```bash
 # Otomatik build script
 ./build-for-customer.sh
 
 # Interactive input:
-# - Müşteri adı (örn: akbank)
-# - DataStudio Host
-# - Campaign Host
+# - Müşteri adı (örn: banka-a)
+# - DataStudio Host (örn: https://analytics.banka-a.com)
+# - Campaign Host (örn: https://links.banka-a.com)
 
-# Output: dist/MUSTERI_ADI/
+# Output: dist/banka-a/
 #   - paylisher.min.js
 #   - Integration guide
 ```
 
+---
+
 ## 📖 Detaylı Dokümantasyon
 
-Kapsamlı dokümantasyon için: [docs-basic/research-web-sdk](../../docs-basic/research-web-sdk/)
+Kapsamlı dokümantasyon: [paylisher.backend.docs/web-sdk](https://github.com/softmarketsolution/paylisher.backend.docs/tree/main/web-sdk)
 
 ### Dokümantasyon İndeksi
 
-- **[TESTING.md](../../docs-basic/research-web-sdk/TESTING.md)** - Test senaryoları, DevOps için test guide
-- **[SECURITY.md](../../docs-basic/research-web-sdk/SECURITY.md)** - Güvenlik best practices, CSP, security headers
-- **[FAQ.md](../../docs-basic/research-web-sdk/FAQ.md)** - Sıkça sorulan sorular (rollup, output formats, etc.)
-- **[DOCKER_DEEP_DIVE.md](../../docs-basic/research-web-sdk/DOCKER_DEEP_DIVE.md)** - Docker derinlemesine açıklama
-- **[web-sdk-architecture.md](../../docs-basic/research-web-sdk/web-sdk-architecture.md)** - SDK mimarisi
+- **[TESTING.md](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/TESTING.md)** - Test senaryoları, DevOps guide
+- **[SECURITY.md](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/SECURITY.md)** - Güvenlik best practices
+- **[FAQ.md](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/FAQ.md)** - Sıkça sorulan sorular
+- **[DOCKER_DEEP_DIVE.md](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/DOCKER_DEEP_DIVE.md)** - Docker derinlemesine
+- **[architecture.md](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/architecture.md)** - SDK mimarisi
 
 ### CI/CD
 
-- **[Jenkinsfile](./Jenkinsfile)** - Multi-environment CI/CD pipeline örneği
+- **[Jenkinsfile](./Jenkinsfile)** - Multi-environment pipeline
 
-## 🔐 Güvenlik
-
-### API Key Public mi?
-
-✅ **Evet, normal!** Web SDK browser'da çalışır, API key görünür.
-
-**Public Key (Web SDK):**
-- Analytics tracking ✅
-- Event capture ✅
-- Public data queries ✅
-
-**Private Key (Backend):**
-- Admin işlemleri ❌ ASLA browser'da!
-- Kullanıcı silme ❌
-- Ödeme işlemleri ❌
-
-**Güvenlik:**
-- CORS restrictions
-- Rate limiting
-- IP whitelist
-- Referrer check
-
-Detaylı bilgi: [SECURITY.md](../../docs-basic/research-web-sdk/SECURITY.md)
+---
 
 ## 🏗️ Proje Yapısı
 
@@ -246,62 +350,59 @@ paylisher-sdk-js/
 ├── Dockerfile.improved     # Production Docker
 ├── docker-compose.yml      # Multi-environment
 ├── Jenkinsfile            # CI/CD pipeline
-├── rollup.config.mjs      # Rollup bundler config
-└── build-for-customer.sh  # On-premise build script
+├── rollup.config.mjs      # Bundler config
+└── build-for-customer.sh  # On-premise build
 ```
+
+---
 
 ## 🧪 Test
 
 ```bash
 # Lokal test
 npm run build
-python3 -m http.server 8080 &
+python3 -m http.server 8080
 open http://localhost:8080/test.html
 
 # Docker test
 docker-compose up -d sdk-dev
 curl http://localhost:8081/health
-curl http://localhost:8081/paylisher.min.js
 ```
 
-Detaylı test senaryoları: [TESTING.md](../../docs-basic/research-web-sdk/TESTING.md)
+Test senaryoları: [TESTING.md](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/TESTING.md)
+
+---
 
 ## 📦 Build Output
 
 | File | Format | Size | Kullanım |
 |------|--------|------|----------|
 | `paylisher.min.js` | UMD | ~5-7KB (gzip) | Production (HTML `<script>`) |
-| `paylisher.js` | UMD | ~40KB | Development (readable) |
-| `paylisher.esm.js` | ESM | ~40KB | Modern bundlers (webpack/vite) |
+| `paylisher.js` | UMD | ~40KB | Development |
+| `paylisher.esm.js` | ESM | ~40KB | Modern bundlers |
+
+---
 
 ## 🤝 Katkıda Bulunma
 
 ```bash
-# Fork & clone
 git clone https://github.com/paylisher/PAYLISHER-SDK-JS.git
-
-# Branch oluştur
 git checkout -b feature/amazing-feature
-
-# Commit
 git commit -m "feat: add amazing feature"
-
-# Push
 git push origin feature/amazing-feature
-
 # Pull Request aç
 ```
+
+---
 
 ## 📄 Lisans
 
 ISC
 
-## 🆘 Destek
-
-- **Dokümantasyon**: [docs-basic/research-web-sdk](../../docs-basic/research-web-sdk/)
-- **Issues**: [GitHub Issues](https://github.com/paylisher/PAYLISHER-SDK-JS/issues)
-- **Email**: support@paylisher.com
-
 ---
 
-**Not:** Bu SDK PostHog tabanlı analytics ve Paylisher Campaign servisini kullanır. Detaylı mimari bilgi için [web-sdk-architecture.md](../../docs-basic/research-web-sdk/web-sdk-architecture.md) dosyasına bakın.
+## 🆘 Destek
+
+- **Dokümantasyon**: [paylisher.backend.docs/web-sdk](https://github.com/softmarketsolution/paylisher.backend.docs/tree/main/web-sdk)
+- **Issues**: [GitHub Issues](https://github.com/paylisher/PAYLISHER-SDK-JS/issues)
+- **Email**: support@paylisher.com
