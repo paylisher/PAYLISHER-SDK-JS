@@ -19,6 +19,8 @@ Web sitenizdeki kullanıcı etkileşimlerini takip etmek ve web-mobil uygulama d
 
 **Entegrasyon Noktası:** Global `<head>` veya `<body>` sonunda (tüm sayfalarda)
 
+**⚠️ ÖNEMLİ:** Script'i sadece **GLOBAL TEMPLATE**'e (örn: `header.php`, `footer.php`, master layout) **BİR KERE** ekleyin. Tüm sayfalarda otomatik çalışır. Her sayfaya ayrı ayrı eklemenize GEREK YOK.
+
 ```html
 <!DOCTYPE html>
 <html>
@@ -296,10 +298,44 @@ docker-compose up -d sdk-prod-saas
 
 ---
 
-## 🏢 On-Premise Deployment
+## 🏢 Deployment Modelleri
 
-Kurumsal müşteriler (örn: A Bankası, B Bankası) için:
+### SaaS (Software as a Service)
 
+**Kullanım:** Tekil müşteriler (e-ticaret siteleri, küçük-orta ölçekli işletmeler)
+
+**SDK Kaynağı:**
+```html
+<script src="https://cdn.paylisher.com/paylisher.min.js"></script>
+```
+
+**Veri Akışı:**
+- SDK: Paylisher CDN'den yüklenir (`cdn.paylisher.com`)
+- Analytics: Paylisher DataStudio'ya gönderilir (`ds.paylisher.com`)
+- Campaign: Paylisher Campaign sunucusuna gönderilir (`links.paylisher.com`)
+
+**Avantajlar:**
+- Hızlı kurulum
+- Otomatik güncellemeler
+- Paylisher tarafından yönetilir
+
+---
+
+### On-Premise
+
+**Kullanım:** Kurumsal müşteriler (örn: A Bankası, B Bankası) - Veri gizliliği/güvenlik gereksinimleri
+
+**SDK Kaynağı:**
+```html
+<script src="https://banka-a.com/paylisher.min.js"></script>
+```
+
+**Veri Akışı:**
+- SDK: Müşterinin kendi sunucusundan yüklenir (`banka-a.com`)
+- Analytics: Müşterinin kendi DataStudio'suna gönderilir (`analytics.banka-a.com`)
+- Campaign: Müşterinin kendi Campaign sunucusuna gönderilir (`links.banka-a.com`)
+
+**Build:**
 ```bash
 # Otomatik build script
 ./build-for-customer.sh
@@ -310,9 +346,14 @@ Kurumsal müşteriler (örn: A Bankası, B Bankası) için:
 # - Campaign Host (örn: https://links.banka-a.com)
 
 # Output: dist/banka-a/
-#   - paylisher.min.js
+#   - paylisher.min.js (müşteri sunucusuna deploy edilir)
 #   - Integration guide
 ```
+
+**Avantajlar:**
+- Veri müşterinin kendi sunucusunda kalır
+- Tam kontrol ve özelleştirme
+- Compliance gereksinimleri (KVKK, GDPR)
 
 ---
 
@@ -330,7 +371,7 @@ Kapsamlı dokümantasyon: [paylisher.backend.docs/web-sdk](https://github.com/so
 
 ### CI/CD
 
-- **[Jenkinsfile](./Jenkinsfile)** - Multi-environment pipeline
+- **[Jenkinsfile](https://github.com/softmarketsolution/paylisher.backend.docs/blob/main/web-sdk/Jenkinsfile)** - Multi-environment pipeline
 
 ---
 
@@ -349,7 +390,6 @@ paylisher-sdk-js/
 │   └── paylisher.esm.js   # ES Module
 ├── Dockerfile.improved     # Production Docker
 ├── docker-compose.yml      # Multi-environment
-├── Jenkinsfile            # CI/CD pipeline
 ├── rollup.config.mjs      # Bundler config
 └── build-for-customer.sh  # On-premise build
 ```
