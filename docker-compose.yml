@@ -1,0 +1,133 @@
+# ============================================
+# Paylisher Web SDK - Docker Compose
+# ============================================
+# Multi-environment support for development, testing, and production
+
+version: '3.8'
+
+services:
+  # ==========================================
+  # Development Environment
+  # ==========================================
+  sdk-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.improved
+      args:
+        DATA_STUDIO_HOST: ${DEV_DATA_STUDIO_HOST:-http://localhost:8000}
+        CAMPAIGN_HOST: ${DEV_CAMPAIGN_HOST:-http://localhost:4040}
+        BUILD_DATE: ${BUILD_DATE}
+        VERSION: ${VERSION:-dev}
+        VCS_REF: ${VCS_REF:-local}
+    image: paylisher/web-sdk:dev
+    container_name: paylisher-sdk-dev
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+    networks:
+      - paylisher-dev
+    labels:
+      - "com.paylisher.environment=development"
+      - "com.paylisher.service=web-sdk"
+
+  # ==========================================
+  # Test Environment (Dünya Katılım Test)
+  # ==========================================
+  sdk-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.improved
+      args:
+        DATA_STUDIO_HOST: ${TEST_DATA_STUDIO_HOST}
+        CAMPAIGN_HOST: ${TEST_CAMPAIGN_HOST}
+        BUILD_DATE: ${BUILD_DATE}
+        VERSION: ${VERSION:-test}
+        VCS_REF: ${VCS_REF}
+    image: paylisher/web-sdk:test
+    container_name: paylisher-sdk-test
+    ports:
+      - "8082:8080"
+    restart: unless-stopped
+    networks:
+      - paylisher-test
+    labels:
+      - "com.paylisher.environment=test"
+      - "com.paylisher.service=web-sdk"
+      - "com.paylisher.customer=dunyadkatilim"
+
+  # ==========================================
+  # Production SaaS Environment
+  # ==========================================
+  sdk-prod-saas:
+    build:
+      context: .
+      dockerfile: Dockerfile.improved
+      args:
+        DATA_STUDIO_HOST: ${PROD_DATA_STUDIO_HOST}
+        CAMPAIGN_HOST: ${PROD_CAMPAIGN_HOST}
+        BUILD_DATE: ${BUILD_DATE}
+        VERSION: ${VERSION:-latest}
+        VCS_REF: ${VCS_REF}
+    image: paylisher/web-sdk:latest
+    container_name: paylisher-sdk-prod
+    ports:
+      - "8080:8080"
+    restart: always
+    networks:
+      - paylisher-prod
+    labels:
+      - "com.paylisher.environment=production"
+      - "com.paylisher.service=web-sdk"
+      - "com.paylisher.deployment=saas"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.25'
+          memory: 64M
+
+  # ==========================================
+  # On-Premise Customer (Dünya Katılım Prod)
+  # ==========================================
+  sdk-onprem-dunyadkatilim:
+    build:
+      context: .
+      dockerfile: Dockerfile.improved
+      args:
+        DATA_STUDIO_HOST: ${ONPREM_DATA_STUDIO_HOST}
+        CAMPAIGN_HOST: ${ONPREM_CAMPAIGN_HOST}
+        BUILD_DATE: ${BUILD_DATE}
+        VERSION: ${VERSION:-onprem-1.0.0}
+        VCS_REF: ${VCS_REF}
+    image: paylisher/web-sdk:onprem-dunyadkatilim
+    container_name: paylisher-sdk-onprem-dunyadkatilim
+    ports:
+      - "8083:8080"
+    restart: always
+    networks:
+      - paylisher-onprem
+    labels:
+      - "com.paylisher.environment=on-premise"
+      - "com.paylisher.service=web-sdk"
+      - "com.paylisher.customer=dunyadkatilim"
+      - "com.paylisher.deployment=on-premise"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.25'
+          memory: 64M
+
+networks:
+  paylisher-dev:
+    driver: bridge
+  paylisher-test:
+    driver: bridge
+  paylisher-prod:
+    driver: bridge
+  paylisher-onprem:
+    driver: bridge
