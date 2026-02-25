@@ -3,12 +3,17 @@ import { Tracker } from './tracker';
 import { Campaign } from './campaign';
 import { PlatformAdapter } from './platform/interface';
 import { WebPlatformAdapter } from './platform/web';
-import { getUrlParams } from './utils/url';
+import { PaylisherDeepLinkConfig } from './deeplink/config';
+import { PaylisherDeepLinkManager, PaylisherDeepLinkHandler } from './deeplink/manager';
+import { PaylisherDeferredDeepLinkConfig } from './deferred/config';
+import { DeferredDeepLinkCallbacks, PaylisherDeferredDeepLinkManager } from './deferred/manager';
 
 export class PaylisherSDK {
     public config: PaylisherConfig;
     private tracker: Tracker;
     private campaign: Campaign;
+    private deepLinkManager: PaylisherDeepLinkManager;
+    private deferredDeepLinkManager: PaylisherDeferredDeepLinkManager;
     private adapter: PlatformAdapter;
     private initialized = false;
 
@@ -19,6 +24,8 @@ export class PaylisherSDK {
 
         this.tracker = new Tracker(this.config, this.adapter);
         this.campaign = new Campaign(this.config, this.adapter);
+        this.deepLinkManager = new PaylisherDeepLinkManager(this.tracker, this.campaign);
+        this.deferredDeepLinkManager = new PaylisherDeferredDeepLinkManager(this.campaign, this.tracker, this.adapter, this.deepLinkManager);
     }
 
     public init(apiKey: string, config: Partial<PaylisherConfig> = {}): void {
@@ -41,6 +48,17 @@ export class PaylisherSDK {
 
         this.tracker = new Tracker(this.config, this.adapter);
         this.campaign = new Campaign(this.config, this.adapter);
+        this.deepLinkManager = new PaylisherDeepLinkManager(this.tracker, this.campaign, !!this.config.debug);
+        this.deferredDeepLinkManager = new PaylisherDeferredDeepLinkManager(
+            this.campaign,
+            this.tracker,
+            this.adapter,
+            this.deepLinkManager,
+            {
+                ...(new PaylisherDeferredDeepLinkConfig()),
+                ...(this.config.deferredDeepLinkConfig || {}),
+            },
+        );
         this.initialized = true;
 
         if (this.config.debug) {
@@ -50,47 +68,11 @@ export class PaylisherSDK {
         // Auto-track page view
         this.tracker.trackPageView();
 
-        // Auto-capture "Deep Link Opened" event (matches iOS/Android SDK behavior)
-        this.captureDeepLinkOpened();
-    }
-
-    /**
-     * Automatically captures "Deep Link Opened" event if deeplink parameters are present
-     * Matches Android SDK auto-capture behavior
-     */
-    private captureDeepLinkOpened(): void {
-        const urlParams = getUrlParams();
-        const hasDeeplinkParams = urlParams['keyName'] || urlParams['jid'];
-
-        if (hasDeeplinkParams && typeof window !== 'undefined') {
-            const url = window.location.href;
-
-            // Event properties: url + all query parameters (same as Android SDK)
-            const eventProperties = {
-                url,
-                ...urlParams,
-            };
-
-            // User properties ($set): deeplink_key for person filtering
-            const userProperties = {
-                deeplink_key: urlParams['keyName'] || urlParams['jid'],
-            };
-
-            // User properties ($set_once): initial deeplink key
-            const userPropertiesSetOnce = {
-                $initial_deeplink_key: urlParams['keyName'] || urlParams['jid'],
-            };
-
-            this.tracker.track('Deep Link Opened', eventProperties, userProperties, userPropertiesSetOnce);
-
-            if (this.config.debug) {
-                console.log('Paylisher: Auto-captured Deep Link Opened event', {
-                    eventProperties,
-                    userProperties,
-                    userPropertiesSetOnce,
-                });
-            }
-        }
+        this.deepLinkManager.initialize({
+            ...(new PaylisherDeepLinkConfig()),
+            ...(this.config.deepLinkConfig || {}),
+        });
+        this.deepLinkManager.handleCurrentUrl();
     }
 
     public track(event: string, properties?: any, userProperties?: any, userPropertiesSetOnce?: any): void {
@@ -99,6 +81,42 @@ export class PaylisherSDK {
 
     public identify(id: string): void {
         this.tracker.identify(id);
+    }
+
+    public configureDeepLinks(config: Partial<PaylisherDeepLinkConfig>): void {
+        this.deepLinkManager.initialize(config);
+    }
+
+    public configureDeferredDeepLink(config: Partial<PaylisherDeferredDeepLinkConfig>): void {
+        this.deferredDeepLinkManager.updateConfig(config);
+    }
+
+    public setDeepLinkHandler(handler: PaylisherDeepLinkHandler): void {
+        this.deepLinkManager.handler = handler;
+    }
+
+    public handleDeepLink(url: string): boolean {
+        return this.deepLinkManager.handleURL(url);
+    }
+
+    public completePendingDeepLink(): void {
+        this.deepLinkManager.completePendingDeepLink();
+    }
+
+    public clearPendingDeepLink(): void {
+        this.deepLinkManager.clearPendingDeepLink();
+    }
+
+    public cancelPendingDeepLink(): void {
+        this.deepLinkManager.cancelPendingDeepLink();
+    }
+
+    public hasPendingDeepLink(): boolean {
+        return this.deepLinkManager.hasPendingDeepLink();
+    }
+
+    public getPendingDeepLinkDestination(): string | null {
+        return this.deepLinkManager.getPendingDestination();
     }
 
     public async deferredDeepLink(deeplinkUrl: string, campaignKey?: string): Promise<void> {
@@ -114,6 +132,14 @@ export class PaylisherSDK {
      */
     public async fetchDeferredDeeplink(): Promise<any> {
         return await this.campaign.fetchDeferredDeeplink();
+    }
+
+    public async checkDeferredDeepLink(callbacks: DeferredDeepLinkCallbacks): Promise<void> {
+        await this.deferredDeepLinkManager.check(callbacks);
+    }
+
+    public async resetDeferredDeepLinkForTesting(): Promise<void> {
+        await this.deferredDeepLinkManager.resetForTesting();
     }
 }
 
@@ -142,3 +168,7 @@ if (typeof window !== 'undefined') {
 }
 
 export default paylisherInstance;
+export { PaylisherDeepLinkConfig, PaylisherDeepLinkManager };
+export type { PaylisherDeepLinkHandler } from './deeplink/manager';
+export { PaylisherDeferredDeepLinkConfig };
+export type { DeferredDeepLinkCallbacks } from './deferred/manager';

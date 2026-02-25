@@ -119,7 +119,7 @@ nano .env.docker
 
 ```env
 PROD_DATA_STUDIO_HOST=https://analytics.paylisher.com
-PROD_CAMPAIGN_HOST=https://links.paylisher.com
+PROD_CAMPAIGN_HOST=https://your.campaign.host
 VERSION=1.1.0
 VCS_REF=$(git rev-parse --short HEAD)
 ```
@@ -184,7 +184,7 @@ docker build \
 # Production build
 docker build \
   --build-arg DATA_STUDIO_HOST=https://analytics.paylisher.com \
-  --build-arg CAMPAIGN_HOST=https://links.paylisher.com \
+  --build-arg CAMPAIGN_HOST=https://your.campaign.host \
   --build-arg VERSION=1.1.0 \
   --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
   --build-arg VCS_REF=$(git rev-parse --short HEAD) \
@@ -324,10 +324,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - cdn.paylisher.com
-    secretName: paylisher-sdk-tls
+    - your.sdk.host
+    secretName: your-sdk-tls-secret
   rules:
-  - host: cdn.paylisher.com
+  - host: your.sdk.host
     http:
       paths:
       - path: /
@@ -547,5 +547,5 @@ docker logs -f paylisher-sdk
 
 - [Docker Multi-Stage Builds](https://docs.docker.com/build/building/multi-stage/)
 - [Nginx Alpine Image](https://hub.docker.com/_/nginx)
-- [PostHog JavaScript SDK](https://posthog.com/docs/references/posthog-js)
+- [JavaScript SDK Reference Example](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 - [OCI Image Spec](https://github.com/opencontainers/image-spec/blob/main/annotations.md)
