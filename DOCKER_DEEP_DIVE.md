@@ -90,12 +90,12 @@ export default {
 
     // 4. Environment variables'ı kodun içine göm (HARDCODE)
     replace({
-      // process.env.DATA_STUDIO_HOST → "https://ds.paylisher.com"
+      // process.env.DATA_STUDIO_HOST → "https://your.paylisher.host"
       "process.env.DATA_STUDIO_HOST": JSON.stringify(
-        process.env.DATA_STUDIO_HOST || "https://ds.paylisher.com",
+        process.env.DATA_STUDIO_HOST || "https://your.paylisher.host",
       ),
       "process.env.CAMPAIGN_HOST": JSON.stringify(
-        process.env.CAMPAIGN_HOST || "https://link.usepublisher.com",
+        process.env.CAMPAIGN_HOST || "https://your.campaign.host",
       ),
       preventAssignment: true,
     }),
@@ -116,7 +116,7 @@ const dataStudioHost = process.env.DATA_STUDIO_HOST;
 
 **Build sonrası (dist/paylisher.min.js):**
 ```javascript
-const dataStudioHost = "https://ds.paylisher.com";
+const dataStudioHost = "https://your.paylisher.host";
 ```
 
 **Sonuç:**
@@ -251,7 +251,7 @@ Web SDK bir **statik dosya** (paylisher.min.js) üretir ve müşterilere **HTTP 
 ```
 Müşteri Web Sitesi
    ↓ (HTTP request)
-<script src="https://cdn.paylisher.com/paylisher.min.js">
+<script src="https://your.sdk.host/paylisher.min.js">
    ↓
 Docker Container (Nginx)
    ↓
@@ -594,7 +594,7 @@ add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 **Örnek saldırı senaryosu:**
 ```html
 <!-- Saldırgan sitesi: evil.com -->
-<iframe src="https://cdn.paylisher.com/paylisher.min.js" style="opacity:0; position:absolute;">
+<iframe src="https://your.sdk.host/paylisher.min.js" style="opacity:0; position:absolute;">
 </iframe>
 <button onclick="clickJack()">Claim Your Prize!</button>
 ```
@@ -673,7 +673,7 @@ Browser XSS Filter: "Şüpheli <script> tag tespit edildi. Sayfa yüklenmeyecek.
 ```
 Kullanıcı: https://mybank.com/account/12345
   → Click →
-  https://cdn.paylisher.com/paylisher.min.js
+  https://your.sdk.host/paylisher.min.js
 ```
 
 **Referrer-Policy olmadan:**
@@ -721,15 +721,15 @@ Bu bölümde nginx.conf'daki performance ve security feature'ları detaylı aç�
 ```
 https://customer-website.com (customer sitesi)
   ↓ (HTTP request)
-  <script src="https://cdn.paylisher.com/paylisher.min.js">
+  <script src="https://your.sdk.host/paylisher.min.js">
   ↓
-  CORS check: "customer-website.com cdn.paylisher.com'dan resource yükleyebilir mi?"
+  CORS check: "customer-website.com your.sdk.host'dan resource yükleyebilir mi?"
 ```
 
 **CORS olmadan:**
 ```
 Browser Console:
-❌ Access to script at 'https://cdn.paylisher.com/paylisher.min.js' from origin 'https://customer-website.com' has been blocked by CORS policy
+❌ Access to script at 'https://your.sdk.host/paylisher.min.js' from origin 'https://customer-website.com' has been blocked by CORS policy
 ```
 
 **nginx.conf'da CORS yapılandırması:**
@@ -903,10 +903,10 @@ add_header Cache-Control "public, max-age=3600, must-revalidate" always;
 **Best Practice:** SDK versioning kullan
 ```html
 <!-- Bad: Cache problemi -->
-<script src="https://cdn.paylisher.com/paylisher.min.js"></script>
+<script src="https://your.sdk.host/paylisher.min.js"></script>
 
 <!-- Good: Version in URL -->
-<script src="https://cdn.paylisher.com/v1.2.0/paylisher.min.js"></script>
+<script src="https://your.sdk.host/v1.2.0/paylisher.min.js"></script>
 ```
 
 #### 3. must-revalidate
@@ -959,7 +959,7 @@ paylisher.init('API_KEY', {...});
 // 3. Event gönder (ASLA cache'lenmez!)
 paylisher.track('pageview', {...});
   ↓
-POST https://ds.paylisher.com/batch
+POST https://your.paylisher.host/batch
   ↓
 DataStudio (Analytics)
 ```
